@@ -9,7 +9,7 @@ const routes:RouteRecordRaw[] = [
             {
                 path: 'uploadBook',
                 name: 'uploadBook',
-                component: () => import('@/views/upload/uploadBook.vue')
+                component: () => import('@/views/upload/index.vue')
             }
         ]
     }

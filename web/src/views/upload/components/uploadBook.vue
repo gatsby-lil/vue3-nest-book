@@ -1,35 +1,35 @@
 <template>
     <div class="upload-book-container" ref="uploadRef">
-      <input type="file" class="upload-book-input" @change="handleChange"/>
-      <ElButton type="primary" @click="handleClick">Button</ElButton>
+      <div>拖拽到此处上传</div>
     </div>
 </template>
   
 
 <script setup lang="ts">
-import useDrag from './hooks/useDrag';
-  const { proxy } = getCurrentInstance()!;
+import {fileUpload} from '@/services'
+import useDrag from '../hooks/useDrag';
   const uploadRef = ref<HTMLDivElement | null>(null)
   const { 
-    filePrview,
     selectFile
   } = useDrag(uploadRef);
-  const handleClick = () => {
-    proxy?.$message('Hello World');
-    console.log(filePrview.value);
-    console.log(selectFile.value);
-  }
 
-  const handleChange = (...args) => {
-    console.log(args, 'sss')
-  }
+  /**
+   * 获取到file文件, 开始上传
+   * 1. 计算文件HASH
+   * 2. 请求接口是否已经存在
+   */
+  watch(selectFile, () => {
+    fileUpload();
+  })
+  
 
 </script>
   
 <style lang="less" scoped>
 .upload-book-container{
-  width:300px;
+  width:800px;
   height:150px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;

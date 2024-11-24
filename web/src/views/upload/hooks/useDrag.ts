@@ -1,3 +1,4 @@
+import { MAX_FILE_SIZE } from "@/constant/upload";
 
 export default function useDrag(refElement: Ref) {
     const {proxy} = getCurrentInstance()!
@@ -11,7 +12,14 @@ export default function useDrag(refElement: Ref) {
             proxy?.$message('未选择任何文件');
             return;
         }
-
+        const { size } = file;
+        if(size > MAX_FILE_SIZE) {
+            proxy?.$message({
+                type: 'error',
+                message: '文件上传不能大于1GB'
+            });
+            return;
+        }
         // 校验文件大小
         selectFile.value = file
     }
@@ -51,6 +59,7 @@ export default function useDrag(refElement: Ref) {
         }
    })
 
+   // todo: 扩展预览部分需要
    watch(selectFile, () => {
         if(!selectFile.value) {
             return;
