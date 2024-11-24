@@ -17,9 +17,15 @@ import useDrag from '../hooks/useDrag';
    * 获取到file文件, 开始上传
    * 1. 计算文件HASH
    * 2. 请求接口是否已经存在
+   * 3. 计算进度
+   * 4. 分片上传完调用合并接口
    */
   watch(selectFile, () => {
     fileUpload();
+  })
+
+  defineExpose({
+    selectFile
   })
   
 
