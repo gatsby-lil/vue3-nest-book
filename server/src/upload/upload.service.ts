@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs-extra');
 
 import { Injectable } from '@nestjs/common';
+import { CHUNK_SIZE } from 'src/const';
 
 @Injectable()
 export class UploadService {
@@ -21,6 +22,12 @@ export class UploadService {
     fs.ensureDirSync(this.TEMP_DIR);
   }
 
+  private pipeStream(fs, ws) {
+    return new Promise((resolve, reject) => {
+      fs.pipe(ws).on('finish', resolve).on('error', reject);
+    });
+  }
+
   async handleChunk(fileName: string, chunkName: string, chunk: Buffer) {
     try {
       // 创建用户保存此分片的文件目录
@@ -36,5 +43,39 @@ export class UploadService {
       console.log(error);
     }
   }
-  mergeChunk() {}
+  async mergeChunk(fileName: string) {
+    try {
+      // 读取分片存放的临时目录
+      const chunkDir = path.resolve(this.TEMP_DIR, fileName);
+      // 读取目录中的文件
+      const chunkFiles = await fs.readdir(chunkDir);
+      // 合并后的文件存放的目录
+      const mergedFilePath = path.resolve(this.PUBLIC_DIR, fileName);
+      // 对分片按照索引进行排列, sort方法会改变原数组
+      chunkFiles.sort(
+        (c, n) => Number(c.split('-')[1]) - Number(n.split('-')[1]),
+      );
+      // 开始合并分片（并行）写入指定的文件夹
+      const pipes = chunkFiles.map((chunkFile, index) => {
+        return this.pipeStream(
+          // 创建可读流, 读取分片内容写入
+          fs.createReadStream(path.resolve(chunkDir, chunkFile), {
+            autoClose: true,
+          }),
+          // 创建可写流, 按照分片编号写入指定位置
+          fs.createWriteStream(mergedFilePath, {
+            start: index * CHUNK_SIZE,
+          }),
+        );
+      });
+
+      await Promise.all(pipes);
+      // 写入完成后, 删除分片的临时文件夹和分片
+      fs.rm(chunkDir, { recursive: true });
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
 }

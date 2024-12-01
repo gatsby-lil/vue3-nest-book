@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import axios from 'axios'
-import { fileUpload } from '@/services'
+import { fileUpload, mergeFile } from '@/services'
 import { createFileChunks, getFileHashName } from '@/utils'
 import { CHUNK_SIZE } from '@/constant'
 
@@ -63,6 +63,8 @@ const confirmClick = async () => {
   // 获取文件的后缀
   const fileExtension = file.name.split('.').pop()
   console.log(fileHashName, file, 'fileHashName')
+  // 用后缀拼接文件名
+  const fileName = fileHashName + '.' + fileExtension
 
   /**
    * 1. hash文件名
@@ -75,30 +77,43 @@ const confirmClick = async () => {
     const chunkName = fileHashName + '.' + fileExtension + '-' + item.chunkIndex
     const formData = new FormData()
     formData.append('originfileName', originfileName)
-    formData.append('fileName', fileHashName)
+    formData.append('fileName', fileName)
     formData.append('fileDesc', form.desc)
     formData.append('chunkName', chunkName)
     formData.append('chunk', item.chunk)
     return formData
   })
-  // 开启任务发送请求
-  uploadChunkFileList(uploadTaskList)
+  // 开启任务发送f分片请求
+  const uploadChunkResult = await uploadChunkFileList(uploadTaskList)
+  console.log(uploadChunkResult)
+  // 调用分片合并接口
+  if (uploadChunkResult === true) {
+    console.log('开始合并')
+    const mergeResult = await mergeFile(fileName)
+    console.log(mergeResult)
+  }
 }
 
 const uploadChunkFileList = async (uploadTaskList: FormData[]) => {
-  for (let uploadChunk of uploadTaskList) {
-    // 创建axios的token用于上传的取消
-    try {
-      const axiosCancelToken = axios.CancelToken.source()
-      axiosCancelTokenList.value.push(axiosCancelToken)
-      const result = await fileUpload(uploadChunk, {
-        cancelToken: axiosCancelToken,
-      })
-      console.log(result, 'result')
-    } catch (error) {
-      console.log(error, 'error')
+  return new Promise(async (resolve, reject) => {
+    // 上传分片
+    for (let uploadChunk of uploadTaskList) {
+      // 创建axios的token用于上传的取消
+      try {
+        const axiosCancelToken = axios.CancelToken.source()
+        axiosCancelTokenList.value.push(axiosCancelToken)
+        const result = await fileUpload(uploadChunk, {
+          cancelToken: axiosCancelToken,
+        })
+        console.log(result, 'result')
+      } catch (error) {
+        console.log(error, 'error')
+        return reject(error)
+      }
     }
-  }
+    // 分片全部上传完成, Promise完成
+    return resolve(true)
+  })
 }
 
 const cancelClick = () => {

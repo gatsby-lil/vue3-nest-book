@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
+  Param,
   Post,
   Res,
   UploadedFile,
@@ -29,6 +31,17 @@ export class UploadController {
       chunkFile.buffer,
     );
     if (result === true) {
+      response.json({
+        success: true,
+      });
+    }
+  }
+
+  @Get('/file/merge/:fileName')
+  async fileMerge(@Param('fileName') fileName: string, @Res() response) {
+    console.log(fileName);
+    const result = await this.uploadService.mergeChunk(fileName);
+    if (result) {
       response.json({
         success: true,
       });
