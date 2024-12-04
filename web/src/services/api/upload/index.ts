@@ -11,10 +11,17 @@ const fileUpload = async (uploadChunk: FormData, config?: any) => {
 }
 
 const mergeFile = async (fileName: string, config?: any) => {
-  const result = await axiosInstance.get(`/upload/file/merge/${fileName}?xxx=123`, {
+  const result = await axiosInstance.get(`/upload/file/merge/${fileName}`, {
     cancelToken: config?.cancelToken?.token,
   })
   return result
 }
 
-export { fileUpload, mergeFile }
+const vertifyExistFile = async (fileName: string, config?: any) => {
+  const result = await axiosInstance.get(`/upload/file/verity/${fileName}`, {
+    cancelToken: config?.cancelToken?.token,
+  })
+  return result
+}
+
+export { fileUpload, mergeFile, vertifyExistFile }

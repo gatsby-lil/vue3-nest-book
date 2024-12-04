@@ -43,6 +43,7 @@ export class UploadService {
       console.log(error);
     }
   }
+
   async mergeChunk(fileName: string) {
     try {
       // 读取分片存放的临时目录
@@ -77,5 +78,44 @@ export class UploadService {
       console.log(error);
       return false;
     }
+  }
+
+  async vertifyUploadedChunks(fileName: string) {
+    // 存放已经上传的分片
+    let uploadedChunkList = [];
+    // 根据文件名获取文件路径
+    const filePath = path.resolve(this.PUBLIC_DIR, fileName);
+    // 查看文件是否已经存在服务器中
+    const isExistFile = await fs.pathExists(filePath);
+    // 如果已经存在则返回无需上传
+    if (isExistFile) {
+      return {
+        needUploaded: false,
+        uploadedChunkList,
+      };
+    }
+    // 在临时目录中查找
+    const chunksDir = path.resolve(this.TEMP_DIR, fileName);
+    const existDir = await fs.pathExists(chunksDir);
+    if (existDir) {
+      // 读取临时目录中所有分片对应的文件
+      const chunkFileNames = await fs.readdir(existDir);
+      // 读取每个分片的文件信息
+      uploadedChunkList = await Promise.all(
+        chunkFileNames.map(async (chunkFileName) => {
+          const { size } = await fs.stat(
+            path.resolve(chunksDir, chunkFileName),
+          );
+          return {
+            chunkFileName,
+            size,
+          };
+        }),
+      );
+    }
+    return {
+      needUploaded: true,
+      uploadedChunkList,
+    };
   }
 }

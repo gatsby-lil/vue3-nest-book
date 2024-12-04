@@ -2,6 +2,7 @@
   <div class="upload-box">
     <div class="upload-enter-box">
       <el-button type="primary" size="large" @click="clickChangeDrawer"> 点击上传 </el-button>
+      <el-button @click="clickProgress"> 查看上传进度 </el-button>
     </div>
     <!-- 文件上传 -->
     <el-drawer v-model="isShowDrawer" size="900px">
@@ -24,12 +25,15 @@
       </template>
     </el-drawer>
     <!-- 文件上传列表 -->
+    <div class="file-progress-box">
+      <el-progress :percentage="50" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import axios from 'axios'
-import { fileUpload, mergeFile } from '@/services'
+import { fileUpload, mergeFile, vertifyExistFile } from '@/services'
 import { createFileChunks, getFileHashName } from '@/utils'
 import { CHUNK_SIZE } from '@/constant'
 
@@ -40,6 +44,7 @@ const form = reactive({
 const isShowDrawer = ref(false)
 const axiosCancelTokenList = ref<any>([])
 const uploadRef = ref()
+const currentFile = ref()
 
 const clickChangeDrawer = () => {
   isShowDrawer.value = true
@@ -66,6 +71,12 @@ const confirmClick = async () => {
   // 用后缀拼接文件名
   const fileName = fileHashName + '.' + fileExtension
 
+  currentFile.value = {
+    file,
+    fileName,
+    originfileName,
+  }
+
   /**
    * 1. hash文件名
    * 2. 原文件名
@@ -85,12 +96,9 @@ const confirmClick = async () => {
   })
   // 开启任务发送f分片请求
   const uploadChunkResult = await uploadChunkFileList(uploadTaskList)
-  console.log(uploadChunkResult)
   // 调用分片合并接口
   if (uploadChunkResult === true) {
-    console.log('开始合并')
-    const mergeResult = await mergeFile(fileName)
-    console.log(mergeResult)
+    await mergeFile(fileName)
   }
 }
 
@@ -105,7 +113,6 @@ const uploadChunkFileList = async (uploadTaskList: FormData[]) => {
         const result = await fileUpload(uploadChunk, {
           cancelToken: axiosCancelToken,
         })
-        console.log(result, 'result')
       } catch (error) {
         console.log(error, 'error')
         return reject(error)
@@ -121,6 +128,8 @@ const cancelClick = () => {
 }
 
 const showInput = () => {}
+
+const clickProgress = async () => {}
 </script>
 
 <style lang="less" scoped>
@@ -131,8 +140,12 @@ const showInput = () => {}
   .upload-enter-box {
     margin-top: 20px;
     margin-left: 30px;
-    width: 200px;
-    height: 150px;
+  }
+  .file-progress-box {
+    padding: 24px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 </style>

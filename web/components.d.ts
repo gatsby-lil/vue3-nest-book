@@ -11,13 +11,11 @@ declare module 'vue' {
     ElDrawer: typeof import('element-plus/es')['ElDrawer']
     ElForm: typeof import('element-plus/es')['ElForm']
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
-    ElIcon: typeof import('element-plus/es')['ElIcon']
     ElInput: typeof import('element-plus/es')['ElInput']
-    ElUpload: typeof import('element-plus/es')['ElUpload']
+    ElProgress: typeof import('element-plus/es')['ElProgress']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Upload: typeof import('./src/components/Upload.vue')['default']
     UploadBook: typeof import('./src/views/upload/components/uploadBook.vue')['default']
-    UploadBookForm: typeof import('./src/views/upload/components/uploadBookForm.vue')['default']
   }
 }

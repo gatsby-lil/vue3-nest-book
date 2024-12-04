@@ -16,6 +16,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 @Controller('upload')
 export class UploadController {
   constructor(private uploadService: UploadService) {}
+
+  // 上传文件分片的接口
   @Post('/fileChunkUpload')
   @HttpCode(200)
   @UseInterceptors(FileInterceptor('chunk'))
@@ -37,14 +39,24 @@ export class UploadController {
     }
   }
 
+  // 合并文件分片接口
   @Get('/file/merge/:fileName')
   async fileMerge(@Param('fileName') fileName: string, @Res() response) {
-    console.log(fileName);
     const result = await this.uploadService.mergeChunk(fileName);
     if (result) {
       response.json({
         success: true,
       });
     }
+  }
+
+  @Get('/file/verity/:fileName')
+  async vertifyExistFileChunks(
+    @Param('fileName') fileName: string,
+    @Res() response,
+  ) {
+    const verityFileObj =
+      await this.uploadService.vertifyUploadedChunks(fileName);
+    response.json(verityFileObj);
   }
 }
