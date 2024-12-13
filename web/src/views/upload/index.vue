@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import axios from 'axios'
-import { fileUpload, mergeFile, vertifyExistFile } from '@/services'
+import uploadApi from '@/api'
 import { createFileChunks, getFileHashName } from '@/utils'
 import { CHUNK_SIZE } from '@/constant'
 
@@ -64,7 +64,7 @@ const confirmClick = async () => {
   // 分片
   const chunks = createFileChunks(file, CHUNK_SIZE)
   // 计算文件hash名称
-  const fileHashName = await getFileHashName(file)
+  const fileHashName = await uploadApi.getFileHashName(file)
   // 获取文件的后缀
   const fileExtension = file.name.split('.').pop()
   console.log(fileHashName, file, 'fileHashName')
@@ -95,7 +95,7 @@ const confirmClick = async () => {
     return formData
   })
   // 开启任务发送f分片请求
-  const uploadChunkResult = await uploadChunkFileList(uploadTaskList)
+  const uploadChunkResult = await uploadApi.uploadChunkFileList(uploadTaskList)
   // 调用分片合并接口
   if (uploadChunkResult === true) {
     await mergeFile(fileName)
@@ -110,7 +110,7 @@ const uploadChunkFileList = async (uploadTaskList: FormData[]) => {
       try {
         const axiosCancelToken = axios.CancelToken.source()
         axiosCancelTokenList.value.push(axiosCancelToken)
-        const result = await fileUpload(uploadChunk, {
+        const result = await uploadApi.fileUpload(uploadChunk, {
           cancelToken: axiosCancelToken,
         })
       } catch (error) {

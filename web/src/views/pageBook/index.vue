@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import { createUser, deleteUser, addUser, findUser } from '@/services/api'
+import userApi from '@/api'
 const add = async () => {
   const params = {
     username: 'Gatsby',
@@ -18,7 +18,7 @@ const add = async () => {
     freezed: 1,
     slogan: '创造奇迹',
   }
-  const result = await createUser(params)
+  const result = await userApi.createUser(params)
 }
 </script>
 
