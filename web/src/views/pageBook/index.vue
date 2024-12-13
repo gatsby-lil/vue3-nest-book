@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import userApi from '@/api'
+import { userApi } from '@/api'
 const add = async () => {
   const params = {
     username: 'Gatsby',

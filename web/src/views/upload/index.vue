@@ -25,15 +25,19 @@
       </template>
     </el-drawer>
     <!-- 文件上传列表 -->
-    <div class="file-progress-box">
-      <el-progress :percentage="50" />
+    <div class="file-progress-box" v-if="currentFile">
+      <el-progress :percentage="currentProgress" />
+      <div class="file-progress-operate">
+        <span @click="stopUploadFile">暂停</span>
+        <span @click="resumeUploadFile">继续</span>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import axios from 'axios'
-import uploadApi from '@/api'
+import { uploadApi } from '@/api'
 import { createFileChunks, getFileHashName } from '@/utils'
 import { CHUNK_SIZE } from '@/constant'
 
@@ -42,9 +46,10 @@ const form = reactive({
 })
 
 const isShowDrawer = ref(false)
-const axiosCancelTokenList = ref<any>([])
+const axiosCancelTokenList = []
 const uploadRef = ref()
 const currentFile = ref()
+const currentProgress = ref(0)
 
 const clickChangeDrawer = () => {
   isShowDrawer.value = true
@@ -58,16 +63,16 @@ const clickChangeDrawer = () => {
  * 4. 分片上传完调用合并接口
  */
 const confirmClick = async () => {
+  isShowDrawer.value = false
   const file = uploadRef.value.selectFile
   // 源文件名
   const originfileName = file.name
   // 分片
   const chunks = createFileChunks(file, CHUNK_SIZE)
   // 计算文件hash名称
-  const fileHashName = await uploadApi.getFileHashName(file)
+  const fileHashName = await getFileHashName(file)
   // 获取文件的后缀
   const fileExtension = file.name.split('.').pop()
-  console.log(fileHashName, file, 'fileHashName')
   // 用后缀拼接文件名
   const fileName = fileHashName + '.' + fileExtension
 
@@ -95,23 +100,42 @@ const confirmClick = async () => {
     return formData
   })
   // 开启任务发送f分片请求
-  const uploadChunkResult = await uploadApi.uploadChunkFileList(uploadTaskList)
+  const uploadChunkResult = await uploadChunkFileList(uploadTaskList)
   // 调用分片合并接口
   if (uploadChunkResult === true) {
-    await mergeFile(fileName)
+    await uploadApi.mergeFile(fileName)
   }
+}
+
+const calculateUploadFileProgress = (curIndex, progressEvent) => {
+  // 计算已经上传的字节数
+  const uploadedByte = curIndex * CHUNK_SIZE
+  // 正在上传片的字节数
+  const uploadProgressByte = progressEvent.loaded
+  // 已经上传的总字节数
+  const completedByte = uploadedByte + uploadProgressByte
+  // 获取文件的总字节数
+  const fileTotalByte = currentFile.value.file.size
+
+  // 计算百分比
+  const progressPrecent = Math.round((completedByte * 100) / fileTotalByte)
+  currentProgress.value = progressPrecent
 }
 
 const uploadChunkFileList = async (uploadTaskList: FormData[]) => {
   return new Promise(async (resolve, reject) => {
     // 上传分片
-    for (let uploadChunk of uploadTaskList) {
+    for (let i = 0; i < uploadTaskList.length; i++) {
+      let uploadChunk = uploadTaskList[i]
       // 创建axios的token用于上传的取消
       try {
         const axiosCancelToken = axios.CancelToken.source()
-        axiosCancelTokenList.value.push(axiosCancelToken)
+        axiosCancelTokenList.push(axiosCancelToken)
         const result = await uploadApi.fileUpload(uploadChunk, {
-          cancelToken: axiosCancelToken,
+          cancelToken: axiosCancelToken.token,
+          onUploadProgress: (progressEvent: ProgressEvent) => {
+            calculateUploadFileProgress(i, progressEvent)
+          },
         })
       } catch (error) {
         console.log(error, 'error')
@@ -130,6 +154,14 @@ const cancelClick = () => {
 const showInput = () => {}
 
 const clickProgress = async () => {}
+
+const stopUploadFile = () => {
+  axiosCancelTokenList.forEach((axiosToken) => {
+    axiosToken.cancel('用户取消了上传')
+  })
+}
+
+const resumeUploadFile = () => {}
 </script>
 
 <style lang="less" scoped>
@@ -142,10 +174,19 @@ const clickProgress = async () => {}
     margin-left: 30px;
   }
   .file-progress-box {
+    marging-top: 20px;
     padding: 24px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 300px;
+    .file-progress-operate {
+      color: #a8abb2;
+      font-size: 12px;
+      span {
+        cursor: pointer;
+      }
+      & span:nth-of-type(2) {
+        margin-left: 8px;
+      }
+    }
   }
 }
 </style>

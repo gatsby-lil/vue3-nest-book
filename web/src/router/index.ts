@@ -2,7 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import Layout from '@/layout/index.vue'
 const routes: RouteRecordRaw[] = [
   {
-    path: '/uploadBook',
+    path: '/',
     component: Layout,
     children: [
       {
