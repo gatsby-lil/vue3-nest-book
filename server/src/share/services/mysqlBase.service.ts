@@ -12,7 +12,6 @@ export class MysqlBaseService<T> {
   }
 
   async create(createDto) {
-    console.log(111);
     return this.repositry.save(createDto);
   }
 }

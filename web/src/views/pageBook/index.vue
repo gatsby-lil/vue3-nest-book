@@ -11,11 +11,11 @@
 import { userApi } from '@/api'
 const add = async () => {
   const params = {
-    username: 'Gatsby',
+    username: '777',
     password: '123456',
-    mobile: '15986655953',
-    avatar: 'www.baidu.com',
-    freezed: 1,
+    mobile: 15986655953,
+    avatar: null,
+    freezed: 0,
     slogan: '创造奇迹',
   }
   const result = await userApi.createUser(params)

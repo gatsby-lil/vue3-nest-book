@@ -35,10 +35,11 @@ import baseCustomRequest from '@/services'
 
 export default {
   createUser(createUser: any, config?: any) {
-    return baseCustomRequest.get({
+    return baseCustomRequest.post({
       url: '/user/create',
       data: createUser,
       ...config,
     })
   },
+  deleteUser() {},
 }

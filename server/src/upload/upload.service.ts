@@ -12,6 +12,7 @@ export class UploadService {
     // 初始化文件存放的目录
     this.initFileDir();
   }
+
   private initFileDir() {
     const rootPath = process.cwd();
     this.PUBLIC_DIR = path.resolve(rootPath, 'file/book');
