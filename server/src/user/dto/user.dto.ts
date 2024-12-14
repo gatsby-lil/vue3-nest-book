@@ -1,3 +1,4 @@
+import { applyDecorators } from '@nestjs/common';
 import {
   IsMobilePhone,
   IsNotEmpty,
@@ -6,7 +7,6 @@ import {
   MinLength,
   Validate,
 } from 'class-validator';
-import { applyDecorators } from '@nestjs/common';
 import { Transform, TransformFnParams, Type } from 'class-transformer';
 import { IsUserNameUniqueConstraint } from '../validator/userValidator';
 

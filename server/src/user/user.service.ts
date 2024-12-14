@@ -23,7 +23,9 @@ export class UserService extends MysqlBaseService<UserEntity> {
     }
   }
 
-  deleteUser() {}
+  deleteUser(id: number) {
+    return this.delete(id);
+  }
 
   updateUser() {}
 

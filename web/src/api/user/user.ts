@@ -1,22 +1,4 @@
 import baseCustomRequest from '@/services'
-
-// import axios from 'axios'
-// const axiosInstance = axios.create({
-//   baseURL: 'http://localhost:3000',
-// })
-
-// const createUser = async (createUser: any) => {
-//   const result = await axiosInstance.post('/user/create', createUser)
-//   return result
-// }
-
-// const deleteUser = async (fileName: string, config?: any) => {
-//   const result = await axiosInstance.get(`/upload/file/merge/${fileName}`, {
-//     cancelToken: config?.cancelToken?.token,
-//   })
-//   return result
-// }
-
 // const addUser = async (fileName: string, config?: any) => {
 //   const result = await axiosInstance.get(`/upload/file/verity/${fileName}`, {
 //     cancelToken: config?.cancelToken?.token,
@@ -34,6 +16,7 @@ import baseCustomRequest from '@/services'
 // export { createUser, deleteUser, addUser, findUser }
 
 export default {
+  // 新增用户
   createUser(createUser: any, config?: any) {
     return baseCustomRequest.post({
       url: '/user/create',
@@ -41,5 +24,12 @@ export default {
       ...config,
     })
   },
-  deleteUser() {},
+
+  // 删除用户
+  deleteUser(id: number, config?: any) {
+    return baseCustomRequest.delete({
+      url: `/user/delete/${id}`,
+      ...config,
+    })
+  },
 }
