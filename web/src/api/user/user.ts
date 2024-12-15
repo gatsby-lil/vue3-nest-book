@@ -1,19 +1,4 @@
 import baseCustomRequest from '@/services'
-// const addUser = async (fileName: string, config?: any) => {
-//   const result = await axiosInstance.get(`/upload/file/verity/${fileName}`, {
-//     cancelToken: config?.cancelToken?.token,
-//   })
-//   return result
-// }
-
-// const findUser = async (fileName: string, config?: any) => {
-//   const result = await axiosInstance.get(`/upload/file/verity/${fileName}`, {
-//     cancelToken: config?.cancelToken?.token,
-//   })
-//   return result
-// }
-
-// export { createUser, deleteUser, addUser, findUser }
 
 export default {
   // 新增用户
@@ -38,6 +23,15 @@ export default {
     return baseCustomRequest.put({
       url: '/user/update',
       data: data,
+      ...config,
+    })
+  },
+
+  // 查询用户
+  getUserList(data: any, config?: any) {
+    return baseCustomRequest.post({
+      url: '/user/list',
+      data,
       ...config,
     })
   },

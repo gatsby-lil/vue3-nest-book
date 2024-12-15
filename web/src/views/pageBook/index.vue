@@ -38,7 +38,15 @@ const updateUser = async () => {
   })
 }
 
-const queryUser = async () => {}
+const queryUser = async () => {
+  const mockParams = {
+    searchWord: '',
+    pageSize: 1,
+    pageNumber: 10,
+  }
+  const result = await userApi.getUserList(mockParams)
+  console.log(result, 'result')
+}
 </script>
 
 <style lang="less" scoped>

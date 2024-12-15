@@ -2,23 +2,23 @@ import { FindOneOptions, Repository } from 'typeorm';
 
 export class MysqlBaseService<T> {
   constructor(protected readonly repositry: Repository<T>) {}
-  findAll() {
+  protected findAll(whereCondition) {
     return this.repositry.find();
   }
 
-  findOne(options: FindOneOptions<T>) {
+  protected findOne(options: FindOneOptions<T>) {
     return this.repositry.findOne(options);
   }
 
-  create(createDto) {
+  protected create(createDto) {
     return this.repositry.save(createDto);
   }
 
-  delete(data) {
+  protected delete(data) {
     return this.repositry.delete(data);
   }
 
-  update(uniqueValue, data) {
+  protected update(uniqueValue, data) {
     return this.repositry.update(uniqueValue, data);
   }
 }

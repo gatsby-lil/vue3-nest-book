@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MysqlBaseService } from 'src/share/services/mysqlBase.service';
 import { UserEntity } from './entities/user.entity';
-import { CreateUserDto } from './dto/user.dto';
+import { CreateUserDto, UpdateUserDto, UserListDto } from './dto/user.dto';
 
 @Injectable()
 export class UserService extends MysqlBaseService<UserEntity> {
@@ -27,9 +27,14 @@ export class UserService extends MysqlBaseService<UserEntity> {
     return this.delete(id);
   }
 
-  updateUser(uniqueValue, updateUserData) {
+  updateUser(uniqueValue, updateUserData: UpdateUserDto) {
     return this.update(uniqueValue, updateUserData);
   }
 
-  findUser() {}
+  async getUserList(whereCondition) {
+    const { searchWord, pageNumber, pageSize } = whereCondition;
+    const userList = await this.findAll(whereCondition);
+    console.log(userList, 'uuu');
+    return userList;
+  }
 }

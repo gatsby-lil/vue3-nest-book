@@ -21,10 +21,10 @@ import { IsUserNameUniqueConstraint } from '../validator/userValidator';
  * 3. 特殊校验
  * 4. 更修时候的可选参数
  */
-
 function ValidatePassword() {
   return applyDecorators(IsString(), IsNotEmpty(), MinLength(6), MaxLength(18));
 }
+
 function ValidateMobile() {
   return applyDecorators(
     IsNotEmpty(),
@@ -67,4 +67,13 @@ export class UpdateUserDto extends OmitType(PartialType(CreateUserDto), [
   @IsInt()
   @IsPositive()
   id: number;
+}
+
+export class UserListDto {
+  @IsOptional()
+  searchWord: string;
+  @IsOptional()
+  pageSize: number;
+  @IsOptional()
+  pageNumber: number;
 }

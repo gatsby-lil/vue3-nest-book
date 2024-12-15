@@ -7,7 +7,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { CreateUserDto, UpdateUserDto, UserListDto } from './dto/user.dto';
 import { UserService } from './user.service';
 
 /**
@@ -43,6 +43,13 @@ export class UserController {
       updateUserData,
     );
     console.log(result, 'result');
+    return result;
+  }
+
+  // 获取用户列表
+  @Post('/list')
+  async getUserList(@Body() userListData: UserListDto) {
+    const result = await this.userService?.getUserList(userListData);
     return result;
   }
 }
