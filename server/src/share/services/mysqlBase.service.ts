@@ -1,4 +1,3 @@
-import { CreateUserDto } from 'src/user/dto/user.dto';
 import { FindOneOptions, Repository } from 'typeorm';
 
 export class MysqlBaseService<T> {
@@ -17,5 +16,9 @@ export class MysqlBaseService<T> {
 
   delete(data) {
     return this.repositry.delete(data);
+  }
+
+  update(uniqueValue, data) {
+    return this.repositry.update(uniqueValue, data);
   }
 }

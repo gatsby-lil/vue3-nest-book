@@ -14,12 +14,12 @@ export class UserService extends MysqlBaseService<UserEntity> {
     super(userRepository);
   }
 
-  async createUser(createUser: CreateUserDto) {
+  async createUser(createUserData: CreateUserDto) {
     try {
-      const result = await this.create(createUser);
+      const result = await this.create(createUserData);
       return result;
     } catch (error) {
-      console.log(error);
+      // console.log(error);
     }
   }
 
@@ -27,7 +27,9 @@ export class UserService extends MysqlBaseService<UserEntity> {
     return this.delete(id);
   }
 
-  updateUser() {}
+  updateUser(uniqueValue, updateUserData) {
+    return this.update(uniqueValue, updateUserData);
+  }
 
   findUser() {}
 }

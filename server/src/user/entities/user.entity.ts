@@ -26,6 +26,9 @@ export class UserEntity {
   @Column({ type: 'int', comment: '是否冻结用户 0 不冻结 1 冻结', default: 0 })
   freezed: number;
 
+  @Column({ type: 'bool', default: false })
+  isSuper: boolean;
+
   @Column({ type: 'varchar', comment: '用户个性签名', default: '' })
   slogan: string;
 

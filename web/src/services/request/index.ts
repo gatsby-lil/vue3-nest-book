@@ -80,6 +80,10 @@ class CustomRequest {
   patch<T = any>(config: CustomRequestConfig<T>) {
     return this.request<T>({ ...config, method: 'PATCH' })
   }
+
+  put<T = any>(config: CustomRequestConfig<T>) {
+    return this.request<T>({ ...config, method: 'PUT' })
+  }
 }
 
 export default CustomRequest

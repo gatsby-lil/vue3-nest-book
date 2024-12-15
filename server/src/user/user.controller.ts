@@ -5,8 +5,9 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/user.dto';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { UserService } from './user.service';
 
 /**
@@ -19,8 +20,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
   // 新增用户
   @Post('/create')
-  async createUser(@Body() createUser: CreateUserDto) {
-    const result = await this.userService.createUser(createUser);
+  async createUser(@Body() createUserData: CreateUserDto) {
+    const result = await this.userService.createUser(createUserData);
     return { result };
   }
   // 删除用户
@@ -33,5 +34,15 @@ export class UserController {
       return;
     }
     console.log('删除失败');
+  }
+  // 修改用户
+  @Put('/update')
+  async updateUser(@Body() updateUserData: UpdateUserDto) {
+    const result = await this.userService.updateUser(
+      updateUserData.id,
+      updateUserData,
+    );
+    console.log(result, 'result');
+    return result;
   }
 }

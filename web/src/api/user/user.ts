@@ -32,4 +32,13 @@ export default {
       ...config,
     })
   },
+
+  // 修改用户
+  updateUser(data: any, config?: any) {
+    return baseCustomRequest.put({
+      url: '/user/update',
+      data: data,
+      ...config,
+    })
+  },
 }

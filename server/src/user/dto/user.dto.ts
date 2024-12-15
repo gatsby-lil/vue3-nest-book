@@ -1,13 +1,17 @@
 import { applyDecorators } from '@nestjs/common';
 import {
+  IsInt,
   IsMobilePhone,
   IsNotEmpty,
+  IsOptional,
+  IsPositive,
   IsString,
   MaxLength,
   MinLength,
   Validate,
 } from 'class-validator';
 import { Transform, TransformFnParams, Type } from 'class-transformer';
+import { OmitType, PartialType } from '@nestjs/mapped-types';
 import { IsUserNameUniqueConstraint } from '../validator/userValidator';
 
 /**
@@ -52,4 +56,15 @@ export class CreateUserDto {
   @Transform(({ value }: TransformFnParams) => (value ? value : ''))
   @IsString()
   slogan: string;
+
+  @IsOptional()
+  isSuper: boolean;
+}
+
+export class UpdateUserDto extends OmitType(PartialType(CreateUserDto), [
+  'username',
+]) {
+  @IsInt()
+  @IsPositive()
+  id: number;
 }

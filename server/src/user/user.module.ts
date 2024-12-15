@@ -3,6 +3,7 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
+import { IsUserNameUniqueConstraint } from './validator/userValidator';
 
 /**
  * * TypeOrmModule.forFeature([UserEntity]):注册实体
@@ -11,6 +12,6 @@ import { UserEntity } from './entities/user.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity])],
   controllers: [UserController],
-  providers: [UserService],
+  providers: [UserService, IsUserNameUniqueConstraint],
 })
 export class UserModule {}
