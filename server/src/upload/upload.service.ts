@@ -15,7 +15,7 @@ export class UploadService {
 
   private initFileDir() {
     const rootPath = process.cwd();
-    this.PUBLIC_DIR = path.resolve(rootPath, 'file/book');
+    this.PUBLIC_DIR = path.resolve(rootPath, 'file');
     this.TEMP_DIR = path.resolve(rootPath, 'temp');
     // 存放上传合并好的文件
     fs.ensureDirSync(this.PUBLIC_DIR);

@@ -38,15 +38,16 @@
 <script setup lang="ts">
 import axios from 'axios'
 import { uploadApi } from '@/api'
-import { createFileChunks, getFileHashName } from '@/utils'
+import { createFileChunks, getFileHashName, QueueTask, isNotEmptyArray } from '@/utils'
 import { CHUNK_SIZE } from '@/constant'
+
+const queueTask = new QueueTask()
 
 const form = reactive({
   desc: '',
 })
 
 const isShowDrawer = ref(false)
-const axiosCancelTokenList = []
 const uploadRef = ref()
 const currentFile = ref()
 const currentProgress = ref(0)
@@ -65,6 +66,18 @@ const clickChangeDrawer = () => {
 const confirmClick = async () => {
   isShowDrawer.value = false
   const file = uploadRef.value.selectFile
+  // 准备上传任务的参数
+  const { originfileName, fileName, uploadTaskList } = await handleUploadParams(file)
+  currentFile.value = {
+    file,
+    fileName,
+    originfileName,
+  }
+  // 开启上传任务
+  uploadChunkFileList(uploadTaskList)
+}
+
+const handleUploadParams = async (file: File) => {
   // 源文件名
   const originfileName = file.name
   // 分片
@@ -75,20 +88,7 @@ const confirmClick = async () => {
   const fileExtension = file.name.split('.').pop()
   // 用后缀拼接文件名
   const fileName = fileHashName + '.' + fileExtension
-
-  currentFile.value = {
-    file,
-    fileName,
-    originfileName,
-  }
-
-  /**
-   * 1. hash文件名
-   * 2. 原文件名
-   * 3. 分片数
-   * 4. 描述
-   * 5. 标签
-   */
+  // 组装分片参数
   const uploadTaskList = chunks.map((item) => {
     const chunkName = fileHashName + '.' + fileExtension + '-' + item.chunkIndex
     const formData = new FormData()
@@ -99,11 +99,10 @@ const confirmClick = async () => {
     formData.append('chunk', item.chunk)
     return formData
   })
-  // 开启任务发送f分片请求
-  const uploadChunkResult = await uploadChunkFileList(uploadTaskList)
-  // 调用分片合并接口
-  if (uploadChunkResult === true) {
-    await uploadApi.mergeFile(fileName)
+  return {
+    originfileName,
+    fileName,
+    uploadTaskList,
   }
 }
 
@@ -123,28 +122,22 @@ const calculateUploadFileProgress = (curIndex, progressEvent) => {
 }
 
 const uploadChunkFileList = async (uploadTaskList: FormData[]) => {
-  return new Promise(async (resolve, reject) => {
-    // 上传分片
-    for (let i = 0; i < uploadTaskList.length; i++) {
-      let uploadChunk = uploadTaskList[i]
-      // 创建axios的token用于上传的取消
-      try {
-        const axiosCancelToken = axios.CancelToken.source()
-        axiosCancelTokenList.push(axiosCancelToken)
-        const result = await uploadApi.fileUpload(uploadChunk, {
-          cancelToken: axiosCancelToken.token,
-          onUploadProgress: (progressEvent: ProgressEvent) => {
-            calculateUploadFileProgress(i, progressEvent)
-          },
-        })
-      } catch (error) {
-        console.log(error, 'error')
-        return reject(error)
-      }
+  const taskList = uploadTaskList.map((uploadChunk, index) => {
+    return () => {
+      return uploadApi.fileUpload(uploadChunk, {
+        onUploadProgress: (progressEvent: ProgressEvent) => {
+          calculateUploadFileProgress(index, progressEvent)
+        },
+      })
     }
-    // 分片全部上传完成, Promise完成
-    return resolve(true)
   })
+  queueTask.pushTask(taskList)
+  const result = await queueTask.startTask()
+  // 请求合并接口
+  if (isNotEmptyArray(result) && result.every((item) => item.success)) {
+    // 调用分片合并接口
+    uploadApi.mergeFile(currentFile.value.fileName)
+  }
 }
 
 const cancelClick = () => {
@@ -156,18 +149,24 @@ const showInput = () => {}
 const clickProgress = async () => {}
 
 const stopUploadFile = () => {
-  axiosCancelTokenList.forEach((axiosToken) => {
-    axiosToken.cancel('用户取消了上传')
-  })
+  queueTask.stopTask()
 }
 
-const resumeUploadFile = () => {}
+const resumeUploadFile = async () => {
+  const result = await queueTask.startTask()
+  console.log(result, 'result')
+  // 请求合并接口
+  if (isNotEmptyArray(result) && result.every((item) => item.success)) {
+    // 调用分片合并接口
+    uploadApi.mergeFile(currentFile.value.fileName)
+  }
+}
 </script>
 
 <style lang="less" scoped>
 .upload-box {
-  height: 100vh;
-  width: 100vw;
+  height: 100%;
+  width: 100%;
 
   .upload-enter-box {
     margin-top: 20px;

@@ -1,4 +1,5 @@
 export const isArry = Array.isArray
+export const isNotEmptyArray = (val:any) => isArry(val) && val.length > 0;
 
 export function generateRandomString(length = 5) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'

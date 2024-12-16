@@ -3,10 +3,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UploadModule } from './upload/upload.module';
 import { SharedModule } from './share/share.module';
-import { UserModule } from './user/user.module';
-
+// import { UserModule } from './user/user.module';
+// UserModule, SharedModule
 @Module({
-  imports: [SharedModule, UploadModule, UserModule],
+  imports: [UploadModule],
   controllers: [AppController],
   providers: [AppService],
 })
