@@ -42,6 +42,7 @@ import { createFileChunks, getFileHashName, QueueTask, isNotEmptyArray } from '@
 import { CHUNK_SIZE } from '@/constant'
 
 const queueTask = new QueueTask()
+const { proxy } = getCurrentInstance()!
 
 const form = reactive({
   desc: '',
@@ -67,12 +68,23 @@ const confirmClick = async () => {
   isShowDrawer.value = false
   const file = uploadRef.value.selectFile
   // 准备上传任务的参数
-  const { originfileName, fileName, uploadTaskList } = await handleUploadParams(file)
+  let { originfileName, fileName, uploadTaskList } = await handleUploadParams(file)
+  // 校验文件是否已经上传
+  const result = await uploadApi.vertifyExistFile(fileName)
+  if (result && result?.needUploaded === false) {
+    // 提示文件已经在服务器端存在, 无需再上传
+    proxy?.$message('文件已经上传, 无需再进行上传')
+    return
+  }
   currentFile.value = {
     file,
     fileName,
     originfileName,
   }
+  const { uploadedChunkList } = result
+
+  uploadTaskList = uploadTaskList.filter((formData: FormData) => !uploadedChunkList.some((item) => item.chunkFileName === formData.get('chunkName')))
+  // 根据已经上传的分片进行过滤
   // 开启上传任务
   uploadChunkFileList(uploadTaskList)
 }
@@ -122,11 +134,12 @@ const calculateUploadFileProgress = (curIndex, progressEvent) => {
 }
 
 const uploadChunkFileList = async (uploadTaskList: FormData[]) => {
-  const taskList = uploadTaskList.map((uploadChunk, index) => {
+  const taskList = uploadTaskList.map((uploadChunk: FormData, index) => {
     return () => {
       return uploadApi.fileUpload(uploadChunk, {
         onUploadProgress: (progressEvent: ProgressEvent) => {
-          calculateUploadFileProgress(index, progressEvent)
+          const curIndex = uploadChunk.get('chunkName')?.split('-')?.pop()
+          calculateUploadFileProgress(curIndex, progressEvent)
         },
       })
     }

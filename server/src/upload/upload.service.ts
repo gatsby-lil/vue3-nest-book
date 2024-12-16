@@ -97,10 +97,11 @@ export class UploadService {
     }
     // 在临时目录中查找
     const chunksDir = path.resolve(this.TEMP_DIR, fileName);
+    // 根据路径查看文件是否存在, 若存在则返回布尔值true
     const existDir = await fs.pathExists(chunksDir);
     if (existDir) {
       // 读取临时目录中所有分片对应的文件
-      const chunkFileNames = await fs.readdir(existDir);
+      const chunkFileNames = await fs.readdir(chunksDir);
       // 读取每个分片的文件信息
       uploadedChunkList = await Promise.all(
         chunkFileNames.map(async (chunkFileName) => {
