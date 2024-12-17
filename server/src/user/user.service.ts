@@ -2,24 +2,31 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MysqlBaseService } from 'src/share/services/mysqlBase.service';
+import { UtilService } from 'src/share/services/util.service';
 import { UserEntity } from './entities/user.entity';
 import { CreateUserDto, UpdateUserDto, UserListDto } from './dto/user.dto';
+
 
 @Injectable()
 export class UserService extends MysqlBaseService<UserEntity> {
   constructor(
     @InjectRepository(UserEntity)
     protected userRepository: Repository<UserEntity>,
+    private readonly utilService: UtilService,
   ) {
     super(userRepository);
   }
 
   async createUser(createUserData: CreateUserDto) {
     try {
+      if(createUserData.password) {
+        createUserData.password = await this.utilService.createHashWord(createUserData.password);
+      }
+      console.log(createUserData, 'create')
       const result = await this.create(createUserData);
       return result;
     } catch (error) {
-      // console.log(error);
+      console.log(error);
     }
   }
 
@@ -34,7 +41,6 @@ export class UserService extends MysqlBaseService<UserEntity> {
   async getUserList(whereCondition) {
     const { searchWord, pageNumber, pageSize } = whereCondition;
     const userList = await this.findAll(whereCondition);
-    console.log(userList, 'uuu');
     return userList;
   }
 }

@@ -14,7 +14,7 @@ export class UserEntity {
   @Column({ type: 'varchar', length: 50, unique: true, comment: '用户名' })
   username: string;
 
-  @Column({ type: 'varchar', length: 16, comment: '用户名密码' })
+  @Column({ type: 'varchar', comment: '用户名密码' })
   password: string;
 
   @Column({ type: 'varchar', length: 20, comment: '用户手机号' })

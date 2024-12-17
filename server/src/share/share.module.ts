@@ -2,7 +2,9 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigurationService } from './services/configuration.service';
+import { UtilService } from './services/util.service';
 
+// 设置为全局, 否则TypeOrmModule无法使用依赖
 @Global()
 @Module({
   // 从根目录加载env文件
@@ -21,8 +23,8 @@ import { ConfigurationService } from './services/configuration.service';
       },
     }),
   ],
-  providers: [ConfigurationService],
-  exports: [ConfigurationService],
+  providers: [ConfigurationService, UtilService],
+  exports: [ConfigurationService, UtilService],
 })
 export class SharedModule {
   constructor() {}

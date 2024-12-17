@@ -4,6 +4,8 @@ import { UserService } from './user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { IsUserNameUniqueConstraint } from './validator/userValidator';
+import { UploadModule } from 'src/upload/upload.module';
+
 
 /**
  * * TypeOrmModule.forFeature([UserEntity]):注册实体

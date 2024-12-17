@@ -25,3 +25,11 @@
 3. 验证器默认值转换Transform
 4. @validate的使用
 5. 基于创建用户的dto，生成更新用户的dto
+
+2024/12/17
+
+1. 密码加密bcrypt库
+2. exports本质是为了项目代码的规范
+   例如A模块(AModule)如果想使用B模块(BModule)的BService
+   B模块: exports: [BService] providers: [BService]
+   A模块: imports: [BModule]
