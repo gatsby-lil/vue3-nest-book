@@ -33,3 +33,8 @@
    例如A模块(AModule)如果想使用B模块(BModule)的BService
    B模块: exports: [BService] providers: [BService]
    A模块: imports: [BModule]
+
+2024/12/18
+
+1. 对用户的手机号进行转换
+2. 日期格式进行转换

@@ -42,7 +42,6 @@ export class UserController {
       updateUserData.id,
       updateUserData,
     );
-    console.log(result, 'result');
     return result;
   }
 
@@ -50,7 +49,6 @@ export class UserController {
   @Post('/list')
   async getUserList(@Body() userListData: UserListDto) {
     const result = await this.userService?.getUserList(userListData);
-    console.log(result, 'result')
     return result;
   }
 }

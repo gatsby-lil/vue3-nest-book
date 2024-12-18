@@ -22,7 +22,6 @@ export class UserService extends MysqlBaseService<UserEntity> {
       if(createUserData.password) {
         createUserData.password = await this.utilService.createHashWord(createUserData.password);
       }
-      console.log(createUserData, 'create')
       const result = await this.create(createUserData);
       return result;
     } catch (error) {
