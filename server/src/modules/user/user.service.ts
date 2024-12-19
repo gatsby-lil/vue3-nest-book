@@ -42,4 +42,8 @@ export class UserService extends MysqlBaseService<UserEntity> {
     const userList = await this.findAll(whereCondition);
     return userList;
   }
+
+  async getUser(id:number) {
+    return this.findOne({where: {id}})
+  }
 }

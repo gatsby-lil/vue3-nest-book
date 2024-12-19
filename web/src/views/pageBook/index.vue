@@ -60,7 +60,7 @@ const queryUser = async () => {
     pageSize: 1,
     pageNumber: 10,
   }
-  const result = await userApi.getUserList(mockParams)
+  const result = await userApi.getUserById(130)
   console.log(result, 'result')
 }
 

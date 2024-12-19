@@ -5,6 +5,7 @@ import {
   UpdateDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Exclude, Expose, Transform } from 'class-transformer';
 
 @Entity('user')
 export class UserEntity {
@@ -15,9 +16,11 @@ export class UserEntity {
   username: string;
 
   @Column({ type: 'varchar', comment: '用户名密码' })
+  @Exclude()
   password: string;
 
   @Column({ type: 'varchar', length: 20, comment: '用户手机号' })
+  @Transform(({value}) => value ? value.replace(/(\d{3})(\d{4})(\d{4})/,'$1****$3') : value)
   mobile: string;
 
   @Column({ type: 'varchar', comment: '用户头像' })
@@ -37,4 +40,9 @@ export class UserEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Expose()
+  get concat() {
+    return `邮箱: zjslucas@163.com`
+  }
 }

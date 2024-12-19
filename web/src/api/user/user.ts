@@ -35,4 +35,12 @@ export default {
       ...config,
     })
   },
+
+  getUserById(id: number, config?: any) {
+    return baseCustomRequest.get({
+      url: `/user/getuser/${id}`,
+      ...config,
+    })
+  }
+  
 }

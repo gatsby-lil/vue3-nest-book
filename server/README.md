@@ -38,3 +38,12 @@
 
 1. 对用户的手机号进行转换
 2. 日期格式进行转换
+
+2024/12/19
+
+1. 使用@ClassSerializerInterceptor和@SerializeOptions
+   同时配合使用装饰器: @Exclude @Expose @Transform  
+   当进行查询时, 使用该装饰器
+   @Exclude 适用于查询的过滤返回
+   @Expose 返回一个实体未定义的字段
+   对Vo的数据进行过滤, 需要在实体中进行操作

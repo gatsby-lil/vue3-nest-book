@@ -1,11 +1,14 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Delete,
   Param,
   ParseIntPipe,
   Post,
   Put,
+  Get,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CreateUserDto, UpdateUserDto, UserListDto } from './dto/user.dto';
 import { UserService } from './user.service';
@@ -16,6 +19,7 @@ import { UserService } from './user.service';
  * VO: 服务端返回给客户端的数据
  */
 @Controller('user')
+@UseInterceptors(ClassSerializerInterceptor)
 export class UserController {
   constructor(private readonly userService: UserService) {}
   // 新增用户
@@ -42,6 +46,15 @@ export class UserController {
       updateUserData.id,
       updateUserData,
     );
+    return result;
+  }
+  // 根据id查询用户
+  @Get('/getuser/:id')
+  // ParseIntPipe 把id转换成数字
+  async getUserById(@Param('id', ParseIntPipe) id) {
+    console.log(id);
+    const result = await this.userService.getUser(id)
+    console.log(result, 'result')
     return result;
   }
 
