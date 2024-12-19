@@ -2,7 +2,7 @@ import { FindOneOptions, Repository } from 'typeorm';
 
 export class MysqlBaseService<T> {
   constructor(protected readonly repositry: Repository<T>) {}
-  protected findAll(whereCondition) {
+  protected findAll() {
     return this.repositry.find();
   }
 
@@ -20,5 +20,13 @@ export class MysqlBaseService<T> {
 
   protected update(uniqueValue, data) {
     return this.repositry.update(uniqueValue, data);
+  }
+
+  protected findAndCountByPage(skip, take, whereCondition) {
+    return this.repositry.findAndCount({
+      where: whereCondition,
+      skip: skip,
+      take: take
+    })
   }
 }

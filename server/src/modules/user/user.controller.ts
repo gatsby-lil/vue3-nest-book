@@ -52,16 +52,14 @@ export class UserController {
   @Get('/getuser/:id')
   // ParseIntPipe 把id转换成数字
   async getUserById(@Param('id', ParseIntPipe) id) {
-    console.log(id);
     const result = await this.userService.getUser(id)
-    console.log(result, 'result')
     return result;
   }
 
   // 获取用户列表
   @Post('/list')
-  async getUserList(@Body() userListData: UserListDto) {
-    const result = await this.userService?.getUserList(userListData);
+  async getUserList(@Body() queryUserList: UserListDto) {
+    const result = await this.userService?.getUserList(queryUserList);
     return result;
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { MysqlBaseService } from 'src/share/services/mysqlBase.service';
 import { UtilService } from 'src/share/services/util.service';
 import { UserEntity } from './entities/user.entity';
@@ -37,10 +37,17 @@ export class UserService extends MysqlBaseService<UserEntity> {
     return this.update(uniqueValue, updateUserData);
   }
 
-  async getUserList(whereCondition) {
-    const { searchWord, pageNumber, pageSize } = whereCondition;
-    const userList = await this.findAll(whereCondition);
-    return userList;
+  async getUserList(queryData) {
+    const { searchWord, pageNumber, pageSize } = queryData;
+    console.log(searchWord, pageNumber, pageSize)
+    const whereCondition = searchWord ? [{username: Like(`%${searchWord}%`)}] : {}
+    const skip = (pageNumber - 1) * pageSize
+    const take = pageSize;
+    const [userList,total] = await this.findAndCountByPage(skip, take, whereCondition);
+    return {
+      userList,
+      total
+    }
   }
 
   async getUser(id:number) {

@@ -9,6 +9,7 @@ import {
   MaxLength,
   MinLength,
   Validate,
+  IsNumber,
 } from 'class-validator';
 import { Transform, TransformFnParams, Type } from 'class-transformer';
 import { OmitType, PartialType } from '@nestjs/mapped-types';
@@ -71,9 +72,12 @@ export class UpdateUserDto extends OmitType(PartialType(CreateUserDto), [
 
 export class UserListDto {
   @IsOptional()
-  searchWord: string;
+  @IsString()
+  searchWord: string | null;
   @IsOptional()
+  @IsNumber()
   pageSize: number;
   @IsOptional()
+  @IsNumber()
   pageNumber: number;
 }
