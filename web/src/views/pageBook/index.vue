@@ -20,7 +20,7 @@
         <el-table-column prop="updatedAt" label="更新时间" width="300" />
         <el-table-column fixed="right" label="操作" min-width="120">
           <template #default="scope">
-            <el-button link type="primary" @click.prevent="deleteRow(scope.row)"> 删除 </el-button>
+            <el-button link type="primary"> 删除 </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -85,9 +85,6 @@ const queryUser = async () => {
   console.log(result, 'result')
 }
 
-const deleteRow = (row) => {
-  console.log(row)
-}
 const getUserList = async () => {
   const mockParams = {
     searchWord: searchWord.value,

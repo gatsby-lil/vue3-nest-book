@@ -4,8 +4,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { Exclude, Expose, Transform } from 'class-transformer';
+import { RoleEntity } from 'src/modules/role/entities/role.entity';
 
 @Entity('user')
 export class UserEntity {
@@ -20,7 +23,9 @@ export class UserEntity {
   password: string;
 
   @Column({ type: 'varchar', length: 20, comment: '用户手机号' })
-  @Transform(({value}) => value ? value.replace(/(\d{3})(\d{4})(\d{4})/,'$1****$3') : value)
+  @Transform(({ value }) =>
+    value ? value.replace(/(\d{3})(\d{4})(\d{4})/, '$1****$3') : value,
+  )
   mobile: string;
 
   @Column({ type: 'varchar', comment: '用户头像' })
@@ -43,6 +48,14 @@ export class UserEntity {
 
   @Expose()
   get concat() {
-    return `邮箱: zjslucas@163.com`
+    return `邮箱: xxxxxx@163.com`;
   }
+  /**
+   * 在多对多的关系中, 至少一侧需要使用@JoinTable
+   * 这个装饰器表示这个实体是关系的所有者, 并且会在数据库中创建一个联结表
+   * 用于保存关联关系
+   */
+  @JoinTable()
+  @ManyToMany(() => RoleEntity)
+  roles: RoleEntity[];
 }
