@@ -4,7 +4,8 @@ import { UserService } from './user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { IsUserNameUniqueConstraint } from './validator/userValidator';
-import { UploadModule } from 'src/modules/upload/upload.module';
+import { RoleModule } from '../role/role.module';
+
 
 
 /**
@@ -12,7 +13,7 @@ import { UploadModule } from 'src/modules/upload/upload.module';
  * * exports: [UserService], 如果Uservice内部使用就无需导出
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity])],
+  imports: [TypeOrmModule.forFeature([UserEntity]), RoleModule],
   controllers: [UserController],
   providers: [UserService, IsUserNameUniqueConstraint],
 })

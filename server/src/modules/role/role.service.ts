@@ -1,18 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { RoleEntity } from './entities/role.entity';
-import { MysqlBaseService } from 'src/share/services/mysqlBase.service';
 import { CreateRoleDto } from './dto/role.dto';
 
 @Injectable()
-export class RoleService extends MysqlBaseService<RoleEntity> {
+export class RoleService  {
   constructor(
-    @InjectRepository(RoleEntity) roleEntity: Repository<RoleEntity>,
+    @InjectRepository(RoleEntity) private readonly roleEntity: Repository<RoleEntity>,
   ) {
-    super(roleEntity);
+   
   }
   createRole(createRoleData: CreateRoleDto) {
-    return this.create(createRoleData);
+    
+  }
+
+  findRole(keyword?:string) {
+    const whereCondition = keyword ? [{roleName: Like(`%${keyword}%`)}] : {}
+    return this.roleEntity.find(whereCondition)
   }
 }

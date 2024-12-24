@@ -1,9 +1,17 @@
 <template>
   <div class="page-book-box">
-    <el-button @click="addUser">添加</el-button>
-    <el-button @click="deleteUser">删除</el-button>
-    <el-button @click="updateUser">修改</el-button>
-    <el-button @click="queryUser">查询</el-button>
+    <div>
+      <el-button @click="addUser">添加用户</el-button>
+      <el-button @click="deleteUser">删除用户</el-button>
+      <el-button @click="updateUser">修改用户</el-button>
+      <el-button @click="queryUser">查询用户</el-button>
+    </div>
+    <div style="margin-top: 10px">
+      <el-button @click="addUser">添加角色</el-button>
+      <el-button @click="deleteUser">删除角色</el-button>
+      <el-button @click="updateUser">修改角色</el-button>
+      <el-button @click="queryUser">查询角色</el-button>
+    </div>
     <div style="margin: 10px"><el-input v-model="searchWord" style="width: 240px" placeholder="请输入" clearable /></div>
     <div style="margin-top: 30px; padding: 16px 24px">
       <el-table :data="tableData" border max-height="500">
@@ -12,12 +20,12 @@
             <span>{{ scope.$index + 1 }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="username" label="用户给名" width="200" />
-        <el-table-column prop="password" label="密码" width="200" />
+        <el-table-column prop="username" label="用户名" width="200" />
         <el-table-column prop="mobile" label="手机号" width="200" />
         <el-table-column prop="avatar" label="头像" width="200" />
-        <el-table-column prop="createdAt" label="创建时间" width="300" />
-        <el-table-column prop="updatedAt" label="更新时间" width="300" />
+        <el-table-column prop="slogan" label="个性签名" show-overflow-tooltip />
+        <el-table-column prop="createdAt" label="创建时间" width="200" />
+        <el-table-column prop="updatedAt" label="更新时间" width="200" />
         <el-table-column fixed="right" label="操作" min-width="120">
           <template #default="scope">
             <el-button link type="primary"> 删除 </el-button>
@@ -34,12 +42,57 @@
       :page-sizes="[10, 20, 30, 40, 50]"
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange" />
+    <el-drawer v-model="createUserDrawer" title="创建用户" :with-header="false">
+      <span>创建用户</span>
+      <!-- 表单内容 -->
+      <el-form :model="userFormData" ref="form" label-width="100px">
+        <!-- 用户名字段 -->
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="userFormData.username" placeholder="请输入用户名"></el-input>
+        </el-form-item>
+
+        <!-- 密码字段 -->
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="userFormData.password" type="password" placeholder="请输入密码"></el-input>
+        </el-form-item>
+
+        <!-- 手机号字段 -->
+        <el-form-item label="手机号" prop="mobile">
+          <el-input v-model="userFormData.mobile" placeholder="请输入手机号"></el-input>
+        </el-form-item>
+
+        <!-- 头像字段 -->
+        <el-form-item label="头像" prop="avatar">
+          <i class="el-icon-plus"></i>
+        </el-form-item>
+
+        <!-- 角色字段 -->
+        <el-form-item label="角色" prop="roleIds">
+          <el-select v-model="userFormData.roleIds" multiple filterable allow-create default-first-option :reserve-keyword="false" placeholder="请选择" style="width: 240px">
+            <el-option v-for="item in roleList" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="个性签名" prop="slogan">
+          <el-input v-model="userFormData.slogan" type="textarea" />
+        </el-form-item>
+
+        <!-- 提交和取消按钮 -->
+      </el-form>
+      <template #footer>
+        <div style="flex: auto">
+          <el-button @click="() => (createUserDrawer = false)">取消</el-button>
+          <el-button type="primary" @click="confirmCreateUser">确认</el-button>
+        </div>
+      </template>
+    </el-drawer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { userApi } from '@/api'
-import { generateRandomString, generateChineseName, generateSignature } from '@/utils'
+import { roleApi } from '@/api'
+import { generateRandomString, generateChineseName, generateSignature, mapLabelValue } from '@/utils'
 
 const tableData = ref([])
 const searchWord = ref('')
@@ -47,14 +100,26 @@ const totalSize = ref(0)
 const pageNumber = ref(1)
 const pageSize = ref(10)
 
-const addUser = async () => {
+const createUserDrawer = ref(false)
+const userFormData = ref({
+  username: '',
+  password: '',
+  mobile: '',
+  avatar: '',
+  slogan: '',
+  roleIds: [],
+})
+
+const roleList = ref([])
+
+const addUser = () => {
+  createUserDrawer.value = true
+}
+
+const confirmCreateUser = async () => {
+  console.log(userFormData.value, 333)
   const params = {
-    username: generateChineseName(),
-    password: '123456',
-    mobile: 15986655953,
-    avatar: null,
-    freezed: 0,
-    slogan: generateSignature(),
+    ...userFormData.value,
   }
   await userApi.createUser(params)
 }
@@ -93,7 +158,6 @@ const getUserList = async () => {
   }
   const result = await userApi.getUserList(mockParams)
   const { userList, total } = result
-  console.log(total, 'total')
   tableData.value = userList
   totalSize.value = total
 }
@@ -118,6 +182,13 @@ const handleCurrentChange = (val: number) => {
 
 watch([pageNumber, pageSize, searchWord], () => {
   getUserList()
+})
+
+watch(createUserDrawer, async () => {
+  if (createUserDrawer.value === true) {
+    const roles = await roleApi.getRoles()
+    roleList.value = mapLabelValue(roles, 'roleName', 'id')
+  }
 })
 </script>
 

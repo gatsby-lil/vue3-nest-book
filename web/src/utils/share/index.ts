@@ -44,5 +44,12 @@ export function generateSignature() {
   return templates[randomIndex];
 }
 
+export function mapLabelValue(list: any[], labelKey:string, valueKey: string) {
+  return list.map(item => ({
+    label: item[labelKey],
+    value: item[valueKey]
+  }))
+}
+
 
 

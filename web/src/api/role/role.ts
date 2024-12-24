@@ -2,10 +2,10 @@ import baseCustomRequest from '@/services'
 
 export default {
   // 新增用户
-  createUser(createUser: any, config?: any) {
+  getRoles(data: any, config?: any) {
     return baseCustomRequest.post({
-      url: '/user/create',
-      data: createUser,
+      url: '/role/list',
+      data,
       ...config,
     })
   },

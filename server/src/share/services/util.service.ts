@@ -8,4 +8,7 @@ export class UtilService {
         // 返回加密后的密码
         return bcrypt.hash(password, salt);
     }
+    arrayIsNotEmpty(value) {
+        return Array.isArray(value) && value.length > 0
+    }
 }

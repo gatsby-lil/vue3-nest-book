@@ -10,6 +10,8 @@ import {
   MinLength,
   Validate,
   IsNumber,
+  IsArray,
+  ArrayNotEmpty,
 } from 'class-validator';
 import { Transform, TransformFnParams, Type } from 'class-transformer';
 import { OmitType, PartialType } from '@nestjs/mapped-types';
@@ -33,6 +35,15 @@ function ValidateMobile() {
     IsMobilePhone('zh-CN'),
     Type(() => String),
   );
+}
+
+function ValidateRoleIds() {
+  return applyDecorators(
+    IsOptional(),
+    IsArray(),
+    ArrayNotEmpty(),
+    IsInt({each: true})
+  )
 }
 
 export class CreateUserDto {
@@ -60,6 +71,9 @@ export class CreateUserDto {
 
   @IsOptional()
   isSuper: boolean;
+
+  @ValidateRoleIds()
+  roleIds:number[]
 }
 
 export class UpdateUserDto extends OmitType(PartialType(CreateUserDto), [
