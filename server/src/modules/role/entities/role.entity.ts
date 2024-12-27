@@ -1,8 +1,11 @@
 import { Exclude } from 'class-transformer';
+import { AccessEntity } from 'src/modules/access/entities/access.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -21,6 +24,10 @@ export class RoleEntity {
    */
   @Column({ default: 1 })
   status: number;
+
+  @ManyToMany(() => AccessEntity)
+  @JoinTable()
+  accesses: AccessEntity[]
 
   @Exclude()
   @CreateDateColumn()

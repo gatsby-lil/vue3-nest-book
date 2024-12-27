@@ -12,6 +12,22 @@
       <el-button @click="updateUser">修改角色</el-button>
       <el-button @click="queryUser">查询角色</el-button>
     </div>
+
+    <div style="margin-top: 10px">
+      <el-button @click="addUser">添加资源</el-button>
+      <el-button @click="deleteUser">删除资源</el-button>
+      <el-button @click="updateUser">修改资源</el-button>
+      <el-button @click="getTreeList">查询资源</el-button>
+    </div>
+    <div style="margin-top: 10px; border: 1px solid #ccc">
+      <el-tree
+        style="max-width: 600px"
+        :data="treeData"
+        :props="{
+          children: 'children',
+          label: 'label',
+        }" />
+    </div>
     <div style="margin: 10px"><el-input v-model="searchWord" style="width: 240px" placeholder="请输入" clearable /></div>
     <div style="margin-top: 30px; padding: 16px 24px">
       <el-table :data="tableData" border max-height="500">
@@ -33,6 +49,7 @@
         </el-table-column>
       </el-table>
     </div>
+
     <el-pagination
       background
       layout="sizes, prev, pager, next"
@@ -92,13 +109,16 @@
 <script setup lang="ts">
 import { userApi } from '@/api'
 import { roleApi } from '@/api'
-import { generateRandomString, generateChineseName, generateSignature, mapLabelValue } from '@/utils'
+import { accessApi } from '@/api'
+import { generateRandomString, generateChineseName, generateSignature, mapLabelValue, isNotEmptyArray } from '@/utils'
 
 const tableData = ref([])
 const searchWord = ref('')
 const totalSize = ref(0)
 const pageNumber = ref(1)
 const pageSize = ref(10)
+
+const treeData = ref([])
 
 const createUserDrawer = ref(false)
 const userFormData = ref({
@@ -162,8 +182,27 @@ const getUserList = async () => {
   totalSize.value = total
 }
 
+const getTreeList = async () => {
+  const result = await accessApi.getAccessTreeList()
+  if (isNotEmptyArray(result)) {
+    const next = (list) => {
+      return list.map((item) => {
+        return {
+          label: item.accessName,
+          value: item.id,
+          children: isNotEmptyArray(item.children) ? next(item.children) : [],
+        }
+      })
+    }
+    treeData.value = next(result)
+  } else {
+    treeData.value = []
+  }
+}
+
 onMounted(() => {
   getUserList()
+  getTreeList()
 })
 
 const initData = async () => {

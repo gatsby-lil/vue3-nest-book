@@ -69,3 +69,10 @@ record:
    5.2 获取角色的实体
    5.3 用户的实体关联字段赋值查找出的用户实体
    5.4 typeorm的save方法, 保存赋值后的实体
+
+2024/12/27
+
+1. 处理树形结构
+   装饰器: @TreeRepository装饰的Entity 可以调用findTree方法 返回树形菜单
+   不传递参数, 则返回父子关系
+   findTree方法传递参数: {relations: ['parent', 'children']}, 返回父对子的关系, 以及子对父的关系
