@@ -7,12 +7,15 @@
     <!-- 文件上传 -->
     <el-drawer v-model="isShowDrawer" size="900px">
       <el-form :model="form" label-width="auto" style="max-width: 600px">
+        <el-form-item label="文件名">
+          <el-input v-model="form.bookName" show-word-limit maxlength="20" />
+        </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="form.desc" type="textarea" show-word-limit maxlength="30" />
+          <el-input v-model="form.description" type="textarea" show-word-limit maxlength="200" />
         </el-form-item>
-        <el-form-item label="标签">
+        <!-- <el-form-item label="标签">
           <el-button class="button-new-tag" size="small" @click="showInput"> + 添加标签</el-button>
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="上传文件">
           <upload-book ref="uploadRef" />
         </el-form-item>
@@ -45,7 +48,8 @@ const queueTask = new QueueTask()
 const { proxy } = getCurrentInstance()!
 
 const form = reactive({
-  desc: '',
+  bookName: '',
+  description: ''
 })
 
 const isShowDrawer = ref(false)
@@ -186,7 +190,7 @@ const resumeUploadFile = async () => {
     margin-left: 30px;
   }
   .file-progress-box {
-    marging-top: 20px;
+    margin-top: 20px;
     padding: 24px 16px;
     width: 300px;
     .file-progress-operate {

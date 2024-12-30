@@ -19,7 +19,7 @@
       <el-button @click="updateUser">修改资源</el-button>
       <el-button @click="getTreeList">查询资源</el-button>
     </div>
-    <div style="margin-top: 10px; border: 1px solid #ccc">
+    <div style="margin: 10px; border: 1px solid #ccc; padding: 16px">
       <el-tree
         style="max-width: 600px"
         :data="treeData"
