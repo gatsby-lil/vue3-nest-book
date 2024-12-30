@@ -6,7 +6,10 @@
         <div class="card-tips"><span style="background: rgb(48, 106, 232)">点云融合</span></div>
         <div class="empty-content"></div>
         <div class="name-content">
-          <div class="name">1111sdfasdfasdf展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述</div>
+          <el-tooltip content="1111sdfasdfasdf展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述" placement="top" effect="light">
+            <div class="name">1111sdfasdfasdf展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述</div>
+          </el-tooltip>
+          
           <!-- 展示文件描述 -->
         </div>
         <div class="text-content">
