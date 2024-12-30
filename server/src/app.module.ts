@@ -5,10 +5,11 @@ import { UserModule } from './modules/user/user.module';
 import { RoleModule } from './modules/role/role.module';
 import { AccessModule } from './modules/access/access.module';
 import { BookModule } from './modules/book/book.module';
-import { BookService } from './book.service/modules/book/book.service';
+import { TagModule } from './modules/tag/tag.module';
+
 @Module({
-  imports: [SharedModule, UserModule, UploadModule, RoleModule, AccessModule, BookModule],
+  imports: [SharedModule, UserModule, UploadModule, RoleModule, AccessModule, BookModule, TagModule],
   controllers: [],
-  providers: [BookService],
+  providers: [],
 })
 export class AppModule {}

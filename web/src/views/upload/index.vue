@@ -2,63 +2,31 @@
   <div class="upload-box">
     <div class="upload-enter-box">
       <el-button type="primary" size="large" @click="clickChangeDrawer"> 点击上传 </el-button>
-      <el-button @click="clickProgress"> 查看上传进度 </el-button>
     </div>
     <!-- 文件上传 -->
-    <el-drawer v-model="isShowDrawer" size="900px">
-      <el-form :model="form" label-width="auto" style="max-width: 600px">
-        <el-form-item label="文件名">
-          <el-input v-model="form.bookName" show-word-limit maxlength="20" />
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" show-word-limit maxlength="200" />
-        </el-form-item>
-        <!-- <el-form-item label="标签">
-          <el-button class="button-new-tag" size="small" @click="showInput"> + 添加标签</el-button>
-        </el-form-item> -->
-        <el-form-item label="上传文件">
-          <upload-book ref="uploadRef" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div style="flex: auto">
-          <el-button @click="cancelClick">取消</el-button>
-          <el-button type="primary" @click="confirmClick">确认</el-button>
-        </div>
-      </template>
-    </el-drawer>
-    <!-- 文件上传列表 -->
-    <div class="file-progress-box" v-if="currentFile">
-      <el-progress :percentage="currentProgress" />
-      <div class="file-progress-operate">
-        <span @click="stopUploadFile">暂停</span>
-        <span @click="resumeUploadFile">继续</span>
-      </div>
-    </div>
+    <upload-book :confirm="confirm" ref="uploadRef" />
+    <!-- 文件列表 -->
+    <page-book-list/>
+    <!-- 上传进度列表 -->
+    <upload-list />
   </div>
 </template>
 
 <script setup lang="ts">
 import axios from 'axios'
-import { uploadApi } from '@/api'
+import { uploadApi, bookApi } from '@/api'
 import { createFileChunks, getFileHashName, QueueTask, isNotEmptyArray } from '@/utils'
 import { CHUNK_SIZE } from '@/constant'
 
 const queueTask = new QueueTask()
 const { proxy } = getCurrentInstance()!
 
-const form = reactive({
-  bookName: '',
-  description: ''
-})
-
-const isShowDrawer = ref(false)
 const uploadRef = ref()
 const currentFile = ref()
 const currentProgress = ref(0)
 
 const clickChangeDrawer = () => {
-  isShowDrawer.value = true
+  uploadRef?.value?.changeShowDrawer(true)
 }
 
 /**
@@ -68,7 +36,7 @@ const clickChangeDrawer = () => {
  * 3. 计算进度
  * 4. 分片上传完调用合并接口
  */
-const confirmClick = async () => {
+const confirm = async () => {
   isShowDrawer.value = false
   const file = uploadRef.value.selectFile
   // 准备上传任务的参数
@@ -157,7 +125,7 @@ const uploadChunkFileList = async (uploadTaskList: FormData[]) => {
   }
 }
 
-const cancelClick = () => {
+const cancel = () => {
   isShowDrawer.value = false
 }
 
@@ -182,27 +150,36 @@ const resumeUploadFile = async () => {
 
 <style lang="less" scoped>
 .upload-box {
-  height: 100%;
-  width: 100%;
-
-  .upload-enter-box {
-    margin-top: 20px;
-    margin-left: 30px;
+  background: #fff;
+  border-radius: 4px;
+  padding: 16px;
+  height: calc(100% - 25px);
+  .upload-list {
+    position: fixed;
+    right: 16px;
+    bottom: 3px;
+    border: 2px solid #eaecf0;
+    border-radius: 12px;
+    z-index: 99;
+    overflow: hidden;
+    width: 360px;
+    background: #ffffff;
+    box-shadow: 0 6px 15px #00000026;
   }
-  .file-progress-box {
-    margin-top: 20px;
-    padding: 24px 16px;
-    width: 300px;
-    .file-progress-operate {
-      color: #a8abb2;
-      font-size: 12px;
-      span {
-        cursor: pointer;
-      }
-      & span:nth-of-type(2) {
-        margin-left: 8px;
-      }
-    }
-  }
+  // .file-progress-box {
+  //   margin-top: 20px;
+  //   padding: 24px 16px;
+  //   width: 300px;
+  //   .file-progress-operate {
+  //     color: #a8abb2;
+  //     font-size: 12px;
+  //     span {
+  //       cursor: pointer;
+  //     }
+  //     & span:nth-of-type(2) {
+  //       margin-left: 8px;
+  //     }
+  //   }
+  // }
 }
 </style>
