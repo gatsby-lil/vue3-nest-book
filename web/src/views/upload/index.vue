@@ -30,6 +30,7 @@ const clickChangeDrawer = () => {
 }
 
 /**
+ * 先调用接口同步表单提交信息
  * 获取到file文件, 开始上传
  * 1. 计算文件HASH
  * 2. 请求接口是否已经存在
@@ -37,7 +38,10 @@ const clickChangeDrawer = () => {
  * 4. 分片上传完调用合并接口
  */
 const confirm = async () => {
-  isShowDrawer.value = false
+  uploadRef.value.changeShowDrawer(false)
+
+ 
+
   const file = uploadRef.value.selectFile
   // 准备上传任务的参数
   let { originfileName, fileName, uploadTaskList } = await handleUploadParams(file)
@@ -48,6 +52,15 @@ const confirm = async () => {
     proxy?.$message('文件已经上传, 无需再进行上传')
     return
   }
+
+  const createBookResult = await bookApi.createBook({
+    ...uploadRef.value.uploadBookForm
+  });
+
+  if(!createBookResult?.id) {
+    return;
+  }
+
   currentFile.value = {
     file,
     fileName,
@@ -56,12 +69,16 @@ const confirm = async () => {
   const { uploadedChunkList } = result
 
   uploadTaskList = uploadTaskList.filter((formData: FormData) => !uploadedChunkList.some((item) => item.chunkFileName === formData.get('chunkName')))
+  uploadTaskList = uploadTaskList.map(formData => {
+    formData.append('id', createBookResult?.id)
+    return formData
+  })
   // 根据已经上传的分片进行过滤
   // 开启上传任务
-  uploadChunkFileList(uploadTaskList)
+  uploadChunkFileList(uploadTaskList, createBookResult?.id)
 }
 
-const handleUploadParams = async (file: File) => {
+const handleUploadParams = async (file: File, id) => {
   // 源文件名
   const originfileName = file.name
   // 分片
@@ -81,6 +98,7 @@ const handleUploadParams = async (file: File) => {
     formData.append('fileDesc', form.desc)
     formData.append('chunkName', chunkName)
     formData.append('chunk', item.chunk)
+    formData.append('id', id)
     return formData
   })
   return {
@@ -105,7 +123,7 @@ const calculateUploadFileProgress = (curIndex, progressEvent) => {
   currentProgress.value = progressPrecent
 }
 
-const uploadChunkFileList = async (uploadTaskList: FormData[]) => {
+const uploadChunkFileList = async (uploadTaskList: FormData[], id) => {
   const taskList = uploadTaskList.map((uploadChunk: FormData, index) => {
     return () => {
       return uploadApi.fileUpload(uploadChunk, {
@@ -121,7 +139,7 @@ const uploadChunkFileList = async (uploadTaskList: FormData[]) => {
   // 请求合并接口
   if (isNotEmptyArray(result) && result.every((item) => item.success)) {
     // 调用分片合并接口
-    uploadApi.mergeFile(currentFile.value.fileName)
+    uploadApi.mergeFile(currentFile.value.fileName, id)
   }
 }
 
@@ -139,7 +157,6 @@ const stopUploadFile = () => {
 
 const resumeUploadFile = async () => {
   const result = await queueTask.startTask()
-  console.log(result, 'result')
   // 请求合并接口
   if (isNotEmptyArray(result) && result.every((item) => item.success)) {
     // 调用分片合并接口

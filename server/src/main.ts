@@ -11,6 +11,7 @@ async function bootstrap() {
   });
   // 让校验器可以注入依赖
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
+  // 可以调用transform
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

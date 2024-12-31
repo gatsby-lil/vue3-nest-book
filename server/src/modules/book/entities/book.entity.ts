@@ -1,6 +1,15 @@
 import { AuditStatus } from 'src/enums/Auditstatus.enum';
 import { UploadStatus } from 'src/enums/uploadstauts.enum';
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { TagEntity } from 'src/modules/tag/entities/tag.entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('book')
 export class BookEntity {
@@ -8,14 +17,7 @@ export class BookEntity {
   id: number;
 
   @Column({ type: 'varchar', length: 20 })
-  originBookName: string;
-
-  // 前端传递的根据文件内容hash的文件名
-  @Column({ type: 'varchar', length: 200, nullable: true })
-  hashBookName: string;
-
-  @Column({ type: 'enum', enum: AuditStatus })
-  auditStatus: AuditStatus;
+  bookName: string;
 
   @Column({ type: 'varchar', length: 200 })
   description: string;
@@ -23,6 +25,9 @@ export class BookEntity {
   // 文件存放的地址
   @Column({ type: 'varchar', length: 200, nullable: true })
   url: string;
+
+  @Column({ type: 'enum', enum: AuditStatus })
+  auditStatus: AuditStatus;
 
   @Column({ type: 'enum', enum: UploadStatus })
   uploadStatus: UploadStatus;
@@ -33,5 +38,9 @@ export class BookEntity {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // todo: 文件的标签
+  @JoinTable()
+  @ManyToMany(() => TagEntity)
+  tags: TagEntity;
+
+  // todo: 上传人
 }

@@ -9,9 +9,9 @@ export default {
     })
   },
 
-  mergeFile(fileName: string, config?: any) {
+  mergeFile(fileName: string, id: number, config?: any) {
     return baseCustomRequest.get({
-      url: `/upload/file/merge/${fileName}`,
+      url: `/upload/file/merge/${fileName}/${id}`,
       ...config,
     })
   },

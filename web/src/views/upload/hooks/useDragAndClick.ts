@@ -1,6 +1,6 @@
 import { MAX_FILE_SIZE } from '@/constant/upload'
 
-export default function useDrag(refElement: Ref) {
+export default function useDrag(refElement: Ref, isShowDrawer:Ref) {
   const { proxy } = getCurrentInstance()!
 
   const selectFile = ref<any>(null)
@@ -34,7 +34,6 @@ export default function useDrag(refElement: Ref) {
     e.stopPropagation()
     // 获取文件对象
     const files = e.dataTransfer?.files || []
-    console.log(files, 'files')
     checkFile(files[0])
   }
 
@@ -50,9 +49,8 @@ export default function useDrag(refElement: Ref) {
     fileInput.click()
   }
 
-  onMounted(() => {
+  const initEvent = () => {
     const divElement = refElement.value
-
     if (divElement) {
       // 拖拽上传事件绑定
       divElement.addEventListener('dragenter', handleDrag)
@@ -62,9 +60,9 @@ export default function useDrag(refElement: Ref) {
       // 点击上传事件绑定
       divElement.addEventListener('click', handleClick)
     }
-  })
+  }
 
-  onUnmounted(() => {
+  const clearEvent = () => {
     const divElement = refElement.value
     if (divElement) {
       divElement.removeEventListener('dragenter', handleDrag)
@@ -72,7 +70,7 @@ export default function useDrag(refElement: Ref) {
       divElement.removeEventListener('drop', handleDrop)
       divElement.removeEventListener('dragleave', handleDrag)
     }
-  })
+  }
 
   // todo: 扩展预览部分需要
   watch(selectFile, () => {
@@ -83,6 +81,14 @@ export default function useDrag(refElement: Ref) {
     filePrview.value = {
       url,
       type: selectFile.value.type,
+    }
+  })
+
+  watch(isShowDrawer, () => {
+    if(isShowDrawer.value) {
+      nextTick(initEvent)
+    } else {
+      clearEvent()
     }
   })
 

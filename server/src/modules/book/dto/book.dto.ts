@@ -1,6 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
 import {
-  IsArray,
   IsEnum,
   IsInt,
   IsOptional,
@@ -12,24 +11,21 @@ import { UploadStatus } from 'src/enums/uploadstauts.enum';
 
 export class CreateBookDto {
   @IsString()
-  originBookName: string;
+  bookName: string;
 
-  @IsString()
-  hashBookName:string;
-
-  @IsEnum(AuditStatus)
-  auditStatus: AuditStatus;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  tags: string[];
+  @IsInt()
+  @IsPositive()
+  tags: number;
 
   @IsOptional()
   description: string;
 
+
+  @IsEnum(AuditStatus)
+  auditStatus: AuditStatus = AuditStatus.PENDING;
+
   @IsEnum(UploadStatus)
-  status: UploadStatus;
+  uploadStatus: UploadStatus = UploadStatus.WAITING;
 
   // todo: 上传人
 }

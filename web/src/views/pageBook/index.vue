@@ -151,11 +151,11 @@ const deleteUser = async () => {
 const updateUser = async () => {
   await userApi.updateUser({
     id: 25,
-    username: '嘿嘿嘿',
+    username: '嘿嘿嘿xxxx',
     password: '888888',
-    mobile: 13510742756,
+    mobile: 13678245305,
     avatar: null,
-    freezed: 0,
+    // freezed: 0,
     slogan: '我们是祖国未来的花朵',
   })
 }

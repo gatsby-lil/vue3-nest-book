@@ -76,3 +76,7 @@ record:
    装饰器: @TreeRepository装饰的Entity 可以调用findTree方法 返回树形菜单
    不传递参数, 则返回父子关系
    findTree方法传递参数: {relations: ['parent', 'children']}, 返回父对子的关系, 以及子对父的关系
+
+2024/12/31
+
+1. dto使用装饰器@IsEnum配合@Transform会有些问题类型无法被转换

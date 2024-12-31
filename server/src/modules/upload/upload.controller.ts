@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   Param,
+  ParseIntPipe,
   Post,
   Res,
   UploadedFile,
@@ -50,9 +51,10 @@ export class UploadController {
     }
   }
 
-  @Get('/file/verity/:fileName')
+  @Get('/file/verity/:fileName/:id')
   async vertifyExistFileChunks(
     @Param('fileName') fileName: string,
+    @Param('id', ParseIntPipe)
     @Res() response,
   ) {
     const verityFileObj =

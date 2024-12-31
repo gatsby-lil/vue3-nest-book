@@ -3,13 +3,13 @@
   <el-drawer v-model="isShowDrawer" size="900px">
     <el-form :model="uploadBookForm" label-width="auto" style="max-width: 600px">
       <el-form-item label="文件名">
-        <el-input v-model="uploadBookForm.originBookName" show-word-limit maxlength="20" />
+        <el-input v-model="uploadBookForm.bookName" show-word-limit maxlength="20" />
       </el-form-item>
       <el-form-item label="描述">
         <el-input v-model="uploadBookForm.description" type="textarea" show-word-limit maxlength="200" />
       </el-form-item>
       <el-form-item label="标签">
-        <el-select v-model="uploadBookForm.tags" multiple filterable allow-create default-first-option :reserve-keyword="false" placeholder="请选择" style="width: 240px">
+        <el-select v-model="uploadBookForm.tags" filterable allow-create default-first-option :reserve-keyword="false" placeholder="请选择" style="width: 600px">
           <el-option v-for="item in tagsList" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
@@ -29,35 +29,46 @@
 </template>
 
 <script setup lang="ts">
+import { tagsApi } from '@/api'
+import { mapLabelValue } from '@/utils'
 import useDragAndClick from '../hooks/useDragAndClick'
 const props = defineProps({
   confirm: {
     type: Function,
-    required: true
+    required: true,
   },
 })
+
+const tagsList = ref([])
+const isShowDrawer = ref(false)
 const uploadRef = ref<HTMLDivElement | null>(null)
-const { selectFile } = useDragAndClick(uploadRef)
+const { selectFile } = useDragAndClick(uploadRef, isShowDrawer)
 
 const uploadBookForm = reactive({
   bookName: '',
   description: '',
-  tags: []
+  tags: [],
 })
 
-const tagsList = ref([])
 
-const isShowDrawer = ref(false)
 
 const changeShowDrawer = (isShow) => {
   isShowDrawer.value = isShow
 }
 
+const initData = async () => {
+  const result = await tagsApi.getTags()
+  tagsList.value = mapLabelValue(result, 'tagName', 'id')
+}
 
+watch(isShowDrawer, () => {
+  initData()
+})
 
 defineExpose({
   selectFile,
-  changeShowDrawer
+  changeShowDrawer,
+  uploadBookForm,
 })
 </script>
 
