@@ -6,9 +6,9 @@
     <!-- 文件上传 -->
     <upload-book :confirm="confirm" ref="uploadRef" />
     <!-- 文件列表 -->
-    <page-book-list/>
+    <page-book-list :bookList="bookList" />
     <!-- 上传进度列表 -->
-    <upload-list />
+    <upload-list :fileList="fileList" v-if="fileList.length > 0" />
   </div>
 </template>
 
@@ -17,13 +17,15 @@ import axios from 'axios'
 import { uploadApi, bookApi } from '@/api'
 import { createFileChunks, getFileHashName, QueueTask, isNotEmptyArray } from '@/utils'
 import { CHUNK_SIZE } from '@/constant'
+import { UploadStatus } from '@/types'
 
 const queueTask = new QueueTask()
 const { proxy } = getCurrentInstance()!
 
 const uploadRef = ref()
 const currentFile = ref()
-const currentProgress = ref(0)
+const fileList = ref<File[]>([])
+const bookList = ref<any[]>([])
 
 const clickChangeDrawer = () => {
   uploadRef?.value?.changeShowDrawer(true)
@@ -40,8 +42,6 @@ const clickChangeDrawer = () => {
 const confirm = async () => {
   uploadRef.value.changeShowDrawer(false)
 
- 
-
   const file = uploadRef.value.selectFile
   // 准备上传任务的参数
   let { originfileName, fileName, uploadTaskList } = await handleUploadParams(file)
@@ -54,12 +54,19 @@ const confirm = async () => {
   }
 
   const createBookResult = await bookApi.createBook({
-    ...uploadRef.value.uploadBookForm
-  });
+    ...uploadRef.value.uploadBookForm,
+  })
 
-  if(!createBookResult?.id) {
-    return;
+  if (!createBookResult?.id) {
+    return
   }
+
+  fileList.value.push({
+    fileName: file.name,
+    fileSize: file.size,
+    percentage: 0,
+    status: UploadStatus.WAITING,
+  })
 
   currentFile.value = {
     file,
@@ -68,12 +75,9 @@ const confirm = async () => {
   }
   const { uploadedChunkList } = result
 
-  uploadTaskList = uploadTaskList.filter((formData: FormData) => !uploadedChunkList.some((item) => item.chunkFileName === formData.get('chunkName')))
-  uploadTaskList = uploadTaskList.map(formData => {
-    formData.append('id', createBookResult?.id)
-    return formData
-  })
   // 根据已经上传的分片进行过滤
+  uploadTaskList = uploadTaskList.filter((formData: FormData) => !uploadedChunkList.some((item) => item.chunkFileName === formData.get('chunkName')))
+
   // 开启上传任务
   uploadChunkFileList(uploadTaskList, createBookResult?.id)
 }
@@ -95,7 +99,6 @@ const handleUploadParams = async (file: File, id) => {
     const formData = new FormData()
     formData.append('originfileName', originfileName)
     formData.append('fileName', fileName)
-    formData.append('fileDesc', form.desc)
     formData.append('chunkName', chunkName)
     formData.append('chunk', item.chunk)
     formData.append('id', id)
@@ -120,7 +123,12 @@ const calculateUploadFileProgress = (curIndex, progressEvent) => {
 
   // 计算百分比
   const progressPrecent = Math.round((completedByte * 100) / fileTotalByte)
-  currentProgress.value = progressPrecent
+  const curFile = fileList.value[0]
+  fileList.value[0] = {
+    ...curFile,
+    percentage: progressPrecent,
+    status: UploadStatus.UPLOADING,
+  }
 }
 
 const uploadChunkFileList = async (uploadTaskList: FormData[], id) => {
@@ -139,17 +147,17 @@ const uploadChunkFileList = async (uploadTaskList: FormData[], id) => {
   // 请求合并接口
   if (isNotEmptyArray(result) && result.every((item) => item.success)) {
     // 调用分片合并接口
-    uploadApi.mergeFile(currentFile.value.fileName, id)
+    const mergeResult = await uploadApi.mergeFile(currentFile.value.fileName, id)
+    if (mergeResult) {
+      const curFile = fileList.value[0]
+      fileList.value[0] = {
+        ...curFile,
+        percentage: 100,
+        status: UploadStatus.SUCCESS,
+      }
+    }
   }
 }
-
-const cancel = () => {
-  isShowDrawer.value = false
-}
-
-const showInput = () => {}
-
-const clickProgress = async () => {}
 
 const stopUploadFile = () => {
   queueTask.stopTask()
@@ -163,6 +171,16 @@ const resumeUploadFile = async () => {
     uploadApi.mergeFile(currentFile.value.fileName)
   }
 }
+
+const getBookList = async () => {
+  const result = await bookApi.getBookList()
+  console.log(result, 'result')
+  bookList.value = result
+}
+
+onMounted(() => {
+  getBookList()
+})
 </script>
 
 <style lang="less" scoped>
@@ -183,20 +201,5 @@ const resumeUploadFile = async () => {
     background: #ffffff;
     box-shadow: 0 6px 15px #00000026;
   }
-  // .file-progress-box {
-  //   margin-top: 20px;
-  //   padding: 24px 16px;
-  //   width: 300px;
-  //   .file-progress-operate {
-  //     color: #a8abb2;
-  //     font-size: 12px;
-  //     span {
-  //       cursor: pointer;
-  //     }
-  //     & span:nth-of-type(2) {
-  //       margin-left: 8px;
-  //     }
-  //   }
-  // }
 }
 </style>

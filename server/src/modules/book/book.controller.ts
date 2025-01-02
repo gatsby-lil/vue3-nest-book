@@ -8,12 +8,20 @@ export class BookController {
   @Post('/create')
   async createBook(@Body() creatBookInfo: CreateBookDto) {
     try {
-      const { bookName, auditStatus } = creatBookInfo;
-      console.log(auditStatus, 'auditStatus');
       const result = await this.bookService.create(creatBookInfo);
       return result;
     } catch (error) {
       console.log(error, 'error');
+    }
+  }
+  @Post('/list')
+  // todo: 分页后续完成
+  async getBookList() {
+    try {
+      const result = await this.bookService.getList()
+      return result
+    } catch (error) {
+      console.log(error, 'error')
     }
   }
 }

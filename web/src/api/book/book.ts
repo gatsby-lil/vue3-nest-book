@@ -7,5 +7,13 @@ export default {
       data: createBookInfo,
       ...config,
     })
+  },
+
+  getBookList(queryData: any, config?: any) {
+    return baseCustomRequest.post({
+      url: `/book/list`,
+      data: queryData,
+      ...config,
+    })
   }
 }

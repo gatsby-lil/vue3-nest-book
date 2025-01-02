@@ -32,7 +32,8 @@
 import { tagsApi } from '@/api'
 import { mapLabelValue } from '@/utils'
 import useDragAndClick from '../hooks/useDragAndClick'
-const props = defineProps({
+
+defineProps({
   confirm: {
     type: Function,
     required: true,
@@ -49,8 +50,6 @@ const uploadBookForm = reactive({
   description: '',
   tags: [],
 })
-
-
 
 const changeShowDrawer = (isShow) => {
   isShowDrawer.value = isShow

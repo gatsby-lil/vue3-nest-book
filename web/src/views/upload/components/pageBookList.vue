@@ -1,15 +1,15 @@
 <template>
   <div class="book-list-box">
-    <div class="item-book-card">
+    <div class="item-book-card" v-for="book in bookList" :key="book.id">
       <div class="card-content">
         <!-- 展示文件标签 -->
         <div class="card-tips"><span style="background: rgb(48, 106, 232)">点云融合</span></div>
         <div class="empty-content"></div>
         <div class="name-content">
           <el-tooltip content="1111sdfasdfasdf展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述" placement="top" effect="light">
-            <div class="name">1111sdfasdfasdf展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述</div>
+            <div class="name">{{ book.description }}</div>
           </el-tooltip>
-          
+
           <!-- 展示文件描述 -->
         </div>
         <div class="text-content">
@@ -21,40 +21,17 @@
         </div>
       </div>
     </div>
-    <div class="item-book-card">
-      <div class="card-content">
-        <div class="card-tips"><span style="background: rgb(48, 106, 232)">点云融合</span></div>
-        <div class="empty-content"></div>
-      </div>
-    </div>
-    <div class="item-book-card">
-      <div class="card-content">
-        <div class="card-tips"><span style="background: rgb(48, 106, 232)">点云融合</span></div>
-        <div class="empty-content"></div>
-      </div>
-    </div>
-    <div class="item-book-card">
-      <div class="card-content">
-        <div class="card-tips"><span style="background: rgb(48, 106, 232)">点云融合</span></div>
-        <div class="empty-content"></div>
-      </div>
-    </div>
-    <div class="item-book-card">
-      <div class="card-content">
-        <div class="card-tips"><span style="background: rgb(48, 106, 232)">点云融合</span></div>
-        <div class="empty-content"></div>
-      </div>
-    </div>
-    <div class="item-book-card">
-      <div class="card-content">
-        <div class="card-tips"><span style="background: rgb(48, 106, 232)">点云融合</span></div>
-        <div class="empty-content"></div>
-      </div>
-    </div>
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+defineProps({
+  bookList: {
+    type: Array,
+    required: true,
+  },
+})
+</script>
 
 <style lang="less" scoped>
 .book-list-box {

@@ -110,7 +110,7 @@
 import { userApi } from '@/api'
 import { roleApi } from '@/api'
 import { accessApi } from '@/api'
-import { generateRandomString, generateChineseName, generateSignature, mapLabelValue, isNotEmptyArray } from '@/utils'
+import { mapLabelValue, isNotEmptyArray } from '@/utils'
 
 const tableData = ref([])
 const searchWord = ref('')

@@ -18,7 +18,12 @@ export class CreateBookDto {
   tags: number;
 
   @IsOptional()
+  @IsString()
   description: string;
+
+  @IsOptional()
+  @IsString()
+  url:string;
 
 
   @IsEnum(AuditStatus)
