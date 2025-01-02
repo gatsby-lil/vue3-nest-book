@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import axios from 'axios'
 import { uploadApi, bookApi } from '@/api'
-import { createFileChunks, getFileHashName, QueueTask, isNotEmptyArray } from '@/utils'
+import { createFileChunks, getFileHashName, QueueTask, isNotEmptyArray, formatBytes } from '@/utils'
 import { CHUNK_SIZE } from '@/constant'
 import { UploadStatus } from '@/types'
 
@@ -55,6 +55,7 @@ const confirm = async () => {
 
   const createBookResult = await bookApi.createBook({
     ...uploadRef.value.uploadBookForm,
+    size: formatBytes(file.size),
   })
 
   if (!createBookResult?.id) {
@@ -155,6 +156,7 @@ const uploadChunkFileList = async (uploadTaskList: FormData[], id) => {
         percentage: 100,
         status: UploadStatus.SUCCESS,
       }
+      getBookList()
     }
   }
 }
@@ -185,21 +187,8 @@ onMounted(() => {
 
 <style lang="less" scoped>
 .upload-box {
-  background: #fff;
   border-radius: 4px;
   padding: 16px;
   height: calc(100% - 25px);
-  .upload-list {
-    position: fixed;
-    right: 16px;
-    bottom: 3px;
-    border: 2px solid #eaecf0;
-    border-radius: 12px;
-    z-index: 99;
-    overflow: hidden;
-    width: 360px;
-    background: #ffffff;
-    box-shadow: 0 6px 15px #00000026;
-  }
 }
 </style>

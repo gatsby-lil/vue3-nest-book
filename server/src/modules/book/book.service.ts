@@ -32,8 +32,14 @@ export class BookService {
     return this.bookEntity.save(bookEntity);
   }
 
-  getList() {
-    return this.bookEntity.find();
+  async getList() {
+    const list = await this.bookEntity.find({relations: ['tags']});
+    return list.map(item => {
+      return {
+        ...item,
+        tags: item.tags[0]?.tagName
+      }
+    })
   }
 
   async update(updateBookInfo: UpdateBookDto) {

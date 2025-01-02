@@ -32,6 +32,9 @@ export class BookEntity {
   @Column({ type: 'enum', enum: UploadStatus })
   uploadStatus: UploadStatus;
 
+  @Column({ type: 'varchar', length: 20 })
+  size: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

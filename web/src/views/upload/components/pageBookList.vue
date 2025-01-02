@@ -2,22 +2,53 @@
   <div class="book-list-box">
     <div class="item-book-card" v-for="book in bookList" :key="book.id">
       <div class="card-content">
-        <!-- 展示文件标签 -->
-        <div class="card-tips"><span style="background: rgb(48, 106, 232)">点云融合</span></div>
+        <!-- 展示审核状态 -->
+        <div class="card-tips">
+          <el-tag :type="getAuditStatusTagType(book.auditStatus)">{{ getAuditStatusText(book.auditStatus) }}</el-tag>
+        </div>
         <div class="empty-content"></div>
         <div class="name-content">
-          <el-tooltip content="1111sdfasdfasdf展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述展示文件描述" placement="top" effect="light">
+          <!-- 展示文件描述 -->
+          <el-tooltip :content="book.description" placement="top-start" effect="light">
             <div class="name">{{ book.description }}</div>
           </el-tooltip>
-
-          <!-- 展示文件描述 -->
+          <div>
+            <el-dropdown trigger="hover">
+              <el-button plain type="text">
+                <el-icon><MoreFilled /></el-icon>
+                <!-- 使用 Font Awesome 图标 -->
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item>下载</el-dropdown-item>
+                  <el-dropdown-item>通知审核</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </div>
         <div class="text-content">
-          <!-- 展示创建人、上传状态、审核状态、文件大小 -->
-          <div class="field"></div>
-          <div class="field"></div>
-          <div class="field"></div>
-          <div class="field"></div>
+          <!-- 展示创建人、标签、文件名称、文件大小 -->
+          <div class="field">
+            <el-icon><Reading /></el-icon>
+            <el-tooltip :content="book.bookName" placement="top-start" effect="light">
+              <span class="text bookname">书名: {{ book.bookName }}</span>
+            </el-tooltip>
+          </div>
+          <div class="field">
+            <el-icon><Memo /></el-icon>
+            <span class="text">文件大小: {{ book?.size }}</span>
+          </div>
+          <!-- todo: 展示创建人-->
+          <div class="field">
+            <el-icon><User /></el-icon>
+            <span class="text">创建人: --</span>
+          </div>
+          <!-- 标签-->
+          <div class="field">
+            <el-icon><CollectionTag /></el-icon>
+            <span class="text">标签: {{ book.tags }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -25,12 +56,41 @@
 </template>
 
 <script setup lang="ts">
+import { AuditStatus } from '@/types'
 defineProps({
   bookList: {
     type: Array,
     required: true,
   },
 })
+
+const getAuditStatusTagType = (auditStatus) => {
+  switch (auditStatus) {
+    case AuditStatus.PENDING:
+      return 'primary'
+    case AuditStatus.PUBLISHED:
+      return 'success'
+
+    case AuditStatus.REJECTED:
+      return 'danger'
+
+    case AuditStatus.WITHDRAWN:
+      return 'info'
+  }
+}
+
+const getAuditStatusText = (auditStatus) => {
+  switch (auditStatus) {
+    case AuditStatus.PENDING:
+      return '待审核'
+    case AuditStatus.PUBLISHED:
+      return '审核通过'
+    case AuditStatus.REJECTED:
+      return '审核不通过'
+    case AuditStatus.WITHDRAWN:
+      return '审核后撤回'
+  }
+}
 </script>
 
 <style lang="less" scoped>
@@ -45,6 +105,8 @@ defineProps({
     background: #fefefe;
     box-shadow: 0 2px 14px -2px #00000014;
     width: 18%;
+    padding-bottom: 8px;
+    border-radius: 8px;
     .card-content {
       border-radius: 8px;
       display: flex;
@@ -54,21 +116,14 @@ defineProps({
       height: 100%;
       background: #ffffff;
       transition: all 0.3s;
-      &:hover {
-        transform: scale(1.05);
-      }
+      // &:hover {
+      //   transform: scale(1.05);
+      // }
       .card-tips {
         position: absolute;
         top: 16px;
         left: 16px;
         z-index: 1;
-        span {
-          display: block;
-          padding: 2px 8px;
-          border-radius: 4px;
-          font-size: 12px;
-          color: #fff;
-        }
       }
       .empty-content {
         margin: 0;
@@ -99,6 +154,7 @@ defineProps({
           color: #333;
           font-weight: 500;
           line-height: 23px;
+          max-width: 200px;
         }
       }
       .text-content {
@@ -114,6 +170,12 @@ defineProps({
           height: 32px;
           background: #f4f4f4;
           gap: 4px;
+          font-size: 12px;
+          span.bookname {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
         }
       }
     }

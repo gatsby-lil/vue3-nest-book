@@ -32,6 +32,9 @@ export class CreateBookDto {
   @IsEnum(UploadStatus)
   uploadStatus: UploadStatus = UploadStatus.WAITING;
 
+  @IsString()
+  size: string;
+
   // todo: 上传人
 }
 
