@@ -1,49 +1,64 @@
-import { MAX_FILE_SIZE } from '@/constant/upload'
+import { MAX_FILE_SIZE, ACCEPT_FILE, MAX_FILE_NUM } from '@/constant'
+import { generateUniqueId } from '@/utils'
+import { IFileWithFileId } from '@/types'
 
-export default function useDrag(refElement: Ref, isShowDrawer:Ref) {
+/**
+ * todo: 后续再完成拖拽上传
+ */
+export default function useDrag(refElement: Ref, isShowDrawer: Ref) {
   const { proxy } = getCurrentInstance()!
 
-  const selectFile = ref<any>(null)
-  const filePrview = ref<any>(null)
+  const selectFileList = ref<IFileWithFileId[]>([])
 
-  const checkFile = (file: File | null) => {
+  const checkFile = (files: File[] | null) => {
     // 校验文件类型
-    if (!file) {
-      proxy?.$message('未选择任何文件')
+    if (!files) {
+      proxy?.$message({
+        type: 'error',
+        message: '未选择任何文件',
+      })
       return
     }
-    const { size } = file
-    if (size > MAX_FILE_SIZE) {
+    // 校验文件大小
+    const totalSize = files.reduce((value: number, nextFile: File) => value + nextFile.size, 0)
+    if (totalSize > MAX_FILE_SIZE) {
       proxy?.$message({
         type: 'error',
         message: '文件上传不能大于1GB',
       })
       return
     }
-    // 校验文件大小
-    selectFile.value = file
-  }
+    // 校验上传的文件数量, 每次上传最多不能超过10个
+    const originLength = selectFileList.value.length
+    if(originLength + files.length > MAX_FILE_NUM) {
+      proxy?.$message({
+        type: 'error',
+        message: '每次上传的文件个数不能超过10个',
+      })
+      return
+    }
 
-  const handleDrag = (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }
-
-  const handleDrop = (e: DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    // 获取文件对象
-    const files = e.dataTransfer?.files || []
-    checkFile(files[0])
+    // 对新加进的文件补充唯一标识
+    const mapFileList = files.map((file) => {
+      return {
+        file,
+        fileId: generateUniqueId(),
+      }
+    })
+    selectFileList.value.push(...mapFileList)
   }
 
   const handleClick = () => {
     const fileInput = document.createElement('input')
     fileInput.type = 'file'
     fileInput.style.display = 'none'
+    fileInput.multiple = true
+    fileInput.accept = ACCEPT_FILE
     fileInput.addEventListener('change', (event: Event) => {
       const target = event.target as HTMLInputElement
-      checkFile(target?.files?.[0] as File)
+      if (target?.files) {
+        checkFile(Array.from(target?.files))
+      }
     })
     document.body.appendChild(fileInput)
     fileInput.click()
@@ -52,11 +67,6 @@ export default function useDrag(refElement: Ref, isShowDrawer:Ref) {
   const initEvent = () => {
     const divElement = refElement.value
     if (divElement) {
-      // 拖拽上传事件绑定
-      divElement.addEventListener('dragenter', handleDrag)
-      divElement.addEventListener('dragover', handleDrag)
-      divElement.addEventListener('drop', handleDrop)
-      divElement.addEventListener('dragleave', handleDrag)
       // 点击上传事件绑定
       divElement.addEventListener('click', handleClick)
     }
@@ -65,27 +75,12 @@ export default function useDrag(refElement: Ref, isShowDrawer:Ref) {
   const clearEvent = () => {
     const divElement = refElement.value
     if (divElement) {
-      divElement.removeEventListener('dragenter', handleDrag)
-      divElement.removeEventListener('dragover', handleDrag)
-      divElement.removeEventListener('drop', handleDrop)
-      divElement.removeEventListener('dragleave', handleDrag)
+      divElement.removeEventListener('click', handleClick)
     }
   }
 
-  // todo: 扩展预览部分需要
-  watch(selectFile, () => {
-    if (!selectFile.value) {
-      return
-    }
-    const url = URL.createObjectURL(selectFile.value)
-    filePrview.value = {
-      url,
-      type: selectFile.value.type,
-    }
-  })
-
   watch(isShowDrawer, () => {
-    if(isShowDrawer.value) {
+    if (isShowDrawer.value) {
       nextTick(initEvent)
     } else {
       clearEvent()
@@ -93,7 +88,6 @@ export default function useDrag(refElement: Ref, isShowDrawer:Ref) {
   })
 
   return {
-    filePrview,
-    selectFile,
+    selectFileList,
   }
 }

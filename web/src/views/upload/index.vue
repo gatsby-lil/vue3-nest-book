@@ -14,6 +14,7 @@
 
 <script setup lang="ts">
 import axios from 'axios'
+import { ElLoading } from 'element-plus'
 import { uploadApi, bookApi } from '@/api'
 import { createFileChunks, getFileHashName, QueueTask, isNotEmptyArray, formatBytes } from '@/utils'
 import { CHUNK_SIZE } from '@/constant'
@@ -40,47 +41,90 @@ const clickChangeDrawer = () => {
  * 4. 分片上传完调用合并接口
  */
 const confirm = async () => {
-  uploadRef.value.changeShowDrawer(false)
+  // 校验必填项
+  await uploadRef.value.formValidate()
+  // 开启loading
+  // const loading = ElLoading.service({
+  //   lock: true,
+  //   text: '文件计算中',
+  //   background: 'rgba(0, 0, 0, 0.7)',
+  // })
+  try {
+    uploadRef.value.changeShowDrawer(false)
 
-  const file = uploadRef.value.selectFile
-  // 准备上传任务的参数
-  let { originfileName, fileName, uploadTaskList } = await handleUploadParams(file)
-  // 校验文件是否已经上传
-  const result = await uploadApi.vertifyExistFile(fileName)
-  if (result && result?.needUploaded === false) {
-    // 提示文件已经在服务器端存在, 无需再上传
-    proxy?.$message('文件已经上传, 无需再进行上传')
-    return
+    const fileObject = uploadRef.value.selectFileList[0]
+    const { file } = fileObject
+    // 准备上传任务的参数
+    let { originfileName, fileName, uploadTaskList } = await handleUploadParams(file)
+    // const fileList = await Promise.all(
+    //   uploadRef.value.selectFileList.map((fileObject) => {
+    //     const { file, fileId } = fileObject
+    //     return handleUploadParams(file)
+    //   }),
+    // )
+    // console.log(fileList, 'fff')
+    // return
+    // 校验文件是否已经上传
+    const result = await uploadApi.vertifyExistFile(fileName)
+
+    if (result && result?.needUploaded === false) {
+      // 提示文件已经在服务器端存在, 无需再上传
+      proxy?.$message('文件已经上传, 无需再进行上传')
+      return
+    }
+
+    const createBookResult = await bookApi.createBook({
+      ...uploadRef.value.uploadBookForm,
+      size: formatBytes(file.size),
+    })
+
+    if (!createBookResult?.id) {
+      return
+    }
+
+    fileList.value.push({
+      fileName: file.name,
+      fileSize: file.size,
+      percentage: 0,
+      status: UploadStatus.WAITING,
+    })
+
+    currentFile.value = {
+      file,
+      fileName,
+      originfileName,
+    }
+    const { uploadedChunkList } = result
+
+    // 根据已经上传的分片进行过滤
+    uploadTaskList = uploadTaskList.filter((formData: FormData) => !uploadedChunkList.some((item) => item.chunkFileName === formData.get('chunkName')))
+
+    // 开启上传任务
+    uploadChunkFileList(uploadTaskList, createBookResult?.id)
+  } catch (error) {
+  } finally {
+    loading.close()
   }
+}
 
-  const createBookResult = await bookApi.createBook({
-    ...uploadRef.value.uploadBookForm,
-    size: formatBytes(file.size),
+const batchVertifyExistFile = async (fileList) => {
+  const vertifyResults = await Promise.allSettled(fileList.map((fileItem) => uploadApi.vertifyExistFile(fileItem.fileName)))
+  if (!isNotEmptyArray(vertifyResults)) {
+    return false
+  }
+  let message = []
+  vertifyResults.forEach((vertifyResult, index) => {
+    if (vertifyResult?.needUploaded === false) {
+      const fileItem = fileList[index]
+      message.push(fileItem.originfileName)
+    }
   })
-
-  if (!createBookResult?.id) {
-    return
+  if (isNotEmptyArray(message)) {
+    message.forEach((m) => {
+      proxy?.$message('文件已经上传, 无需再进行上传')
+    })
   }
-
-  fileList.value.push({
-    fileName: file.name,
-    fileSize: file.size,
-    percentage: 0,
-    status: UploadStatus.WAITING,
-  })
-
-  currentFile.value = {
-    file,
-    fileName,
-    originfileName,
-  }
-  const { uploadedChunkList } = result
-
-  // 根据已经上传的分片进行过滤
-  uploadTaskList = uploadTaskList.filter((formData: FormData) => !uploadedChunkList.some((item) => item.chunkFileName === formData.get('chunkName')))
-
-  // 开启上传任务
-  uploadChunkFileList(uploadTaskList, createBookResult?.id)
+  return vertifyResults.filter((v) => v?.needUploaded)
 }
 
 const handleUploadParams = async (file: File, id) => {
@@ -188,7 +232,6 @@ onMounted(() => {
 <style lang="less" scoped>
 .upload-box {
   border-radius: 4px;
-  padding: 16px;
   height: calc(100% - 25px);
 }
 </style>

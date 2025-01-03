@@ -14,10 +14,7 @@
           </el-tooltip>
           <div>
             <el-dropdown trigger="hover">
-              <el-button plain type="text">
-                <el-icon><MoreFilled /></el-icon>
-                <!-- 使用 Font Awesome 图标 -->
-              </el-button>
+              <el-icon><MoreFilled /></el-icon>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item>下载</el-dropdown-item>
@@ -116,9 +113,6 @@ const getAuditStatusText = (auditStatus) => {
       height: 100%;
       background: #ffffff;
       transition: all 0.3s;
-      // &:hover {
-      //   transform: scale(1.05);
-      // }
       .card-tips {
         position: absolute;
         top: 16px;
