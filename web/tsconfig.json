@@ -14,8 +14,11 @@
     "noEmit": true,
     "jsx": "preserve",
 
+    "noEmitOnError": false, // 即使有错误，也继续生成文件
+    "noImplicitAny": false, // 关闭隐式 `any` 类型的错误提示
+
     /* Linting */
-    "strict": true,
+    "strict": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,

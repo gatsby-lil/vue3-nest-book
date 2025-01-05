@@ -2,9 +2,6 @@
   <!-- 文件上传 -->
   <el-drawer v-model="isShowDrawer" size="900px">
     <el-form :model="uploadBookForm" :rules="uploadBookFormRules" label-width="auto" style="max-width: 600px" ref="uploadBookFormRef">
-      <el-form-item label="文件名" prop="bookName">
-        <el-input v-model="uploadBookForm.bookName" show-word-limit maxlength="20" />
-      </el-form-item>
       <el-form-item label="描述">
         <el-input v-model="uploadBookForm.description" type="textarea" show-word-limit maxlength="200" />
       </el-form-item>
@@ -72,16 +69,11 @@ const uploadBookFormRef = ref(null)
 const { selectFileList } = useDragAndClick(uploadRef, isShowDrawer)
 
 const uploadBookForm = reactive({
-  bookName: '',
   description: '',
   tags: [],
 })
 
 const uploadBookFormRules = ref({
-  bookName: [
-    { required: true, message: '必填项', trigger: 'blur' },
-    // { min: 5, max: 10, message: '名称长度应在 2 到 20 个字符之间', trigger: 'blur' },
-  ],
   tags: [{ required: true, message: '必填项', trigger: 'blur' }],
   selectFile: [
     {
@@ -98,7 +90,7 @@ const uploadBookFormRules = ref({
   ],
 })
 
-const changeShowDrawer = (isShow) => {
+const changeShowDrawer = (isShow: boolean) => {
   isShowDrawer.value = isShow
 }
 
@@ -107,7 +99,7 @@ const initData = async () => {
   tagsList.value = mapLabelValue(result, 'tagName', 'id')
 }
 
-const deleteFile = (fileId) => {
+const deleteFile = (fileId: string) => {
   selectFileList.value = selectFileList.value.filter((fileObject: IFileWithFileId) => fileObject.fileId != fileId)
 }
 
@@ -133,7 +125,7 @@ defineExpose({
   }
   .file-item {
     display: flex;
-    align-items: center; /* 水平居中对齐 */
+    align-items: center;
     .file-icon {
       padding-top: 3px;
     }

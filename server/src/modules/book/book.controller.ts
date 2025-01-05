@@ -1,14 +1,14 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { CreateBookDto } from './dto/book.dto';
+import { CreateBookListDto } from './dto/book.dto';
 import { BookService } from './book.service';
 
 @Controller('book')
 export class BookController {
   constructor(private readonly bookService: BookService) {}
   @Post('/create')
-  async createBook(@Body() creatBookInfo: CreateBookDto) {
+  async createBook(@Body() createBookList: CreateBookListDto) {
     try {
-      const result = await this.bookService.create(creatBookInfo);
+      const result = await this.bookService.create(createBookList);
       return result;
     } catch (error) {
       console.log(error, 'error');
@@ -18,10 +18,10 @@ export class BookController {
   // todo: 分页后续完成
   async getBookList() {
     try {
-      const result = await this.bookService.getList()
-      return result
+      const result = await this.bookService.getList();
+      return result;
     } catch (error) {
-      console.log(error, 'error')
+      console.log(error, 'error');
     }
   }
 }

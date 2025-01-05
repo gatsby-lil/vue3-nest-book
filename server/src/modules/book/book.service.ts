@@ -15,31 +15,36 @@ export class BookService {
   ) {}
 
   async create(createBookInfo) {
-    // 获取标签的实体
-    const tags = createBookInfo.tags;
-    let tagEntity = null;
-    if (tags) {
-      tagEntity = await this.tagEntity.find({
-        where: {
-          id: tags,
-        },
-      });
-    }
-    const bookEntity = await this.bookEntity.create({
-      ...createBookInfo,
-      tags: tagEntity,
-    });
-    return this.bookEntity.save(bookEntity);
+    const { fileList } = createBookInfo;
+    // 批量创建实体
+    const bookEntityList = await Promise.all(
+      fileList.map(async (fileInfo) => {
+        const tags = fileInfo.tags;
+        let tagEntity = null;
+        if (tags) {
+          tagEntity = await this.tagEntity.find({
+            where: {
+              id: tags,
+            },
+          });
+        }
+        return await this.bookEntity.create({
+          ...fileInfo,
+          tags: tagEntity,
+        });
+      }),
+    );
+    return this.bookEntity.save(bookEntityList);
   }
 
   async getList() {
-    const list = await this.bookEntity.find({relations: ['tags']});
-    return list.map(item => {
+    const list = await this.bookEntity.find({ relations: ['tags'] });
+    return list.map((item) => {
       return {
         ...item,
-        tags: item.tags[0]?.tagName
-      }
-    })
+        tags: item.tags[0]?.tagName,
+      };
+    });
   }
 
   async update(updateBookInfo: UpdateBookDto) {

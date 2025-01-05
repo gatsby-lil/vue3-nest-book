@@ -3,7 +3,7 @@
     <el-collapse v-model="activeNames" @change="handleChange">
       <el-collapse-item title="" name="1">
         <div class="upload-list-wrapper">
-          <div v-for="(file, index) in fileList" :key="index" class="upload-list-item-box">
+          <div v-for="(file, index) in uploadingFileList" :key="index" class="upload-list-item-box">
             <div class="upload-list-item">
               <div class="item-type">
                 <img src="@/assets/text.svg" alt="icon" />
@@ -34,7 +34,7 @@ import { formatBytes } from '@/utils'
 import { UploadStatus } from '@/types'
 
 defineProps({
-  fileList: {
+  uploadingFileList: {
     type: Array,
     required: true,
   },
@@ -42,11 +42,11 @@ defineProps({
 
 const activeNames = ref(['1'])
 
-const getFileUploadStatusColor = (status) => {
+const getFileUploadStatusColor = (status: UploadStatus) => {
   switch (status) {
     case UploadStatus.WAITING:
     case UploadStatus.UPLOADING:
-      return '#f56c6c'
+      return '#409eff'
     case UploadStatus.FAIL:
       return '#f56c6c'
     case UploadStatus.SUCCESS:
@@ -54,7 +54,7 @@ const getFileUploadStatusColor = (status) => {
   }
 }
 
-const getFileUploadStatusText = (status) => {
+const getFileUploadStatusText = (status: UploadStatus) => {
   switch (status) {
     case UploadStatus.WAITING:
       return '等待上传'
@@ -67,7 +67,7 @@ const getFileUploadStatusText = (status) => {
   }
 }
 
-const getFileUploadStatusIcon = (status) => {
+const getFileUploadStatusIcon = (status: UploadStatus) => {
   switch (status) {
     case UploadStatus.WAITING:
       return 'UploadFilled'
@@ -80,7 +80,7 @@ const getFileUploadStatusIcon = (status) => {
   }
 }
 
-const getFileUploadStatusIconStyle = (status) => {
+const getFileUploadStatusIconStyle = (status: UploadStatus) => {
   switch (status) {
     case UploadStatus.WAITING:
     case UploadStatus.UPLOADING:
@@ -96,9 +96,9 @@ const getFileUploadStatusIconStyle = (status) => {
         color: '#67C23A',
       }
   }
-
-  const format = (percentage) => (percentage === 100 ? '' : `${percentage}%`)
 }
+
+const format = (percentage: number) => (percentage === 100 ? '' : `${percentage}%`)
 
 const handleChange = (val: string[]) => {
   console.log(val)

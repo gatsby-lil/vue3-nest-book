@@ -1,7 +1,7 @@
 import baseCustomRequest from '@/services'
 
 export default {
-  createBook(createBookInfo: any, config?:any) {
+  createBook(createBookInfo: any, config?: any) {
     return baseCustomRequest.post({
       url: `/book/create`,
       data: createBookInfo,
@@ -9,11 +9,11 @@ export default {
     })
   },
 
-  getBookList(queryData: any, config?: any) {
+  getBookList(queryData?: any, config?: any) {
     return baseCustomRequest.post({
       url: `/book/list`,
       data: queryData,
       ...config,
     })
-  }
+  },
 }

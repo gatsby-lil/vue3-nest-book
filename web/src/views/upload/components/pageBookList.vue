@@ -34,7 +34,7 @@
           </div>
           <div class="field">
             <el-icon><Memo /></el-icon>
-            <span class="text">文件大小: {{ book?.size }}</span>
+            <span class="text">{{ book?.size }}</span>
           </div>
           <!-- todo: 展示创建人-->
           <div class="field">
@@ -61,7 +61,7 @@ defineProps({
   },
 })
 
-const getAuditStatusTagType = (auditStatus) => {
+const getAuditStatusTagType = (auditStatus: AuditStatus) => {
   switch (auditStatus) {
     case AuditStatus.PENDING:
       return 'primary'
@@ -76,7 +76,7 @@ const getAuditStatusTagType = (auditStatus) => {
   }
 }
 
-const getAuditStatusText = (auditStatus) => {
+const getAuditStatusText = (auditStatus: AuditStatus) => {
   switch (auditStatus) {
     case AuditStatus.PENDING:
       return '待审核'

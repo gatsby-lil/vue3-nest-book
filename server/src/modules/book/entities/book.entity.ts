@@ -16,10 +16,10 @@ export class BookEntity {
   @PrimaryGeneratedColumn({ type: 'int' })
   id: number;
 
-  @Column({ type: 'varchar', length: 20 })
+  @Column({ type: 'varchar', length: 50 })
   bookName: string;
 
-  @Column({ type: 'varchar', length: 200 })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   description: string;
 
   // 文件存放的地址

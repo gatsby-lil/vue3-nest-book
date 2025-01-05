@@ -1,10 +1,14 @@
 import { PartialType } from '@nestjs/mapped-types';
+import { Type } from 'class-transformer';
 import {
+  ArrayNotEmpty,
+  IsArray,
   IsEnum,
   IsInt,
   IsOptional,
   IsPositive,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { AuditStatus } from 'src/enums/Auditstatus.enum';
 import { UploadStatus } from 'src/enums/uploadstauts.enum';
@@ -23,8 +27,7 @@ export class CreateBookDto {
 
   @IsOptional()
   @IsString()
-  url:string;
-
+  url: string;
 
   @IsEnum(AuditStatus)
   auditStatus: AuditStatus = AuditStatus.PENDING;
@@ -34,8 +37,14 @@ export class CreateBookDto {
 
   @IsString()
   size: string;
+}
 
-  // todo: 上传人
+export class CreateBookListDto {
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CreateBookDto)
+  fileList: CreateBookDto[];
 }
 
 export class UpdateBookDto extends PartialType(CreateBookDto) {

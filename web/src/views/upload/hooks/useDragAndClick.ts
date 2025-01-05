@@ -30,7 +30,7 @@ export default function useDrag(refElement: Ref, isShowDrawer: Ref) {
     }
     // 校验上传的文件数量, 每次上传最多不能超过10个
     const originLength = selectFileList.value.length
-    if(originLength + files.length > MAX_FILE_NUM) {
+    if (originLength + files.length > MAX_FILE_NUM) {
       proxy?.$message({
         type: 'error',
         message: '每次上传的文件个数不能超过10个',
@@ -53,7 +53,7 @@ export default function useDrag(refElement: Ref, isShowDrawer: Ref) {
     fileInput.type = 'file'
     fileInput.style.display = 'none'
     fileInput.multiple = true
-    fileInput.accept = ACCEPT_FILE
+    // fileInput.accept = ACCEPT_FILE
     fileInput.addEventListener('change', (event: Event) => {
       const target = event.target as HTMLInputElement
       if (target?.files) {

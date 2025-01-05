@@ -8,155 +8,161 @@
     <!-- 文件列表 -->
     <page-book-list :bookList="bookList" />
     <!-- 上传进度列表 -->
-    <upload-list :fileList="fileList" v-if="fileList.length > 0" />
+    <upload-list :uploadingFileList="uploadingFileList" v-if="uploadingFileList.length > 0" />
   </div>
 </template>
 
 <script setup lang="ts">
-import axios from 'axios'
 import { ElLoading } from 'element-plus'
 import { uploadApi, bookApi } from '@/api'
 import { createFileChunks, getFileHashName, QueueTask, isNotEmptyArray, formatBytes } from '@/utils'
-import { CHUNK_SIZE } from '@/constant'
-import { UploadStatus } from '@/types'
+import { CHUNK_SIZE, MAX_UPLOADING } from '@/constant'
+import { IFileWithFileId, UploadStatus } from '@/types'
 
-const queueTask = new QueueTask()
 const { proxy } = getCurrentInstance()!
 
 const uploadRef = ref()
-const currentFile = ref()
-const fileList = ref<File[]>([])
+const uploadingFileList = ref<any[]>([])
 const bookList = ref<any[]>([])
+const uploadTaskList = ref<any[]>([])
 
 const clickChangeDrawer = () => {
   uploadRef?.value?.changeShowDrawer(true)
 }
 
-/**
- * 先调用接口同步表单提交信息
- * 获取到file文件, 开始上传
- * 1. 计算文件HASH
- * 2. 请求接口是否已经存在
- * 3. 计算进度
- * 4. 分片上传完调用合并接口
- */
 const confirm = async () => {
   // 校验必填项
   await uploadRef.value.formValidate()
   // 开启loading
-  // const loading = ElLoading.service({
-  //   lock: true,
-  //   text: '文件计算中',
-  //   background: 'rgba(0, 0, 0, 0.7)',
-  // })
+  const loading = ElLoading.service({
+    lock: true,
+    text: '文件计算中',
+    background: 'rgba(0, 0, 0, 0.7)',
+  })
   try {
     uploadRef.value.changeShowDrawer(false)
-
-    const fileObject = uploadRef.value.selectFileList[0]
-    const { file } = fileObject
-    // 准备上传任务的参数
-    let { originfileName, fileName, uploadTaskList } = await handleUploadParams(file)
-    // const fileList = await Promise.all(
-    //   uploadRef.value.selectFileList.map((fileObject) => {
-    //     const { file, fileId } = fileObject
-    //     return handleUploadParams(file)
-    //   }),
-    // )
-    // console.log(fileList, 'fff')
-    // return
-    // 校验文件是否已经上传
-    const result = await uploadApi.vertifyExistFile(fileName)
-
-    if (result && result?.needUploaded === false) {
-      // 提示文件已经在服务器端存在, 无需再上传
-      proxy?.$message('文件已经上传, 无需再进行上传')
+    const fileHashNameList = await Promise.all(
+      uploadRef.value.selectFileList.map(async (fileObject: IFileWithFileId) => {
+        const { file, fileId } = fileObject
+        const hashFileName = await getFileHashNameByFile(file)
+        return {
+          hashFileName,
+          fileId,
+        }
+      }),
+    )
+    // 调用后端接口, 判断文件是否需要进行分片上传
+    const uploadListByHashName = await Promise.all(fileHashNameList.map((fileItem) => uploadApi.vertifyExistFile(fileItem.hashFileName)))
+    // 判断还需要上传的文件
+    const needUploadedList = batchVertifyExistFile(uploadRef.value.selectFileList, uploadListByHashName)
+    if (!isNotEmptyArray(needUploadedList)) {
       return
     }
-
+    // 同步上传信息, 获取上传成功后的id
     const createBookResult = await bookApi.createBook({
-      ...uploadRef.value.uploadBookForm,
-      size: formatBytes(file.size),
+      fileList: needUploadedList.map((fileObject) => {
+        return {
+          ...uploadRef.value.uploadBookForm,
+          bookName: fileObject.file.name,
+          size: formatBytes(fileObject.file.size),
+        }
+      }),
     })
 
-    if (!createBookResult?.id) {
-      return
-    }
-
-    fileList.value.push({
-      fileName: file.name,
-      fileSize: file.size,
-      percentage: 0,
-      status: UploadStatus.WAITING,
+    // 展示上传中的信息
+    uploadingFileList.value = needUploadedList.map((fileObject) => {
+      return {
+        fileName: fileObject.file.name,
+        fileSize: fileObject.file.size,
+        percentage: 0,
+        status: UploadStatus.WAITING,
+        fileId: fileObject.fileId,
+      }
     })
 
-    currentFile.value = {
-      file,
-      fileName,
-      originfileName,
-    }
-    const { uploadedChunkList } = result
+    // 开启文件上传准备分片数据
+    const uploadTaskChunkList = needUploadedList.map((fileObject, index) => {
+      const fileItem = fileHashNameList.find((item) => item.fileId === fileObject.fileId)
+      const uploadChunkList = getUploadChunkList(fileObject.file, fileItem.hashFileName, fileObject.uploadedChunkList)
+      // id: 是需要在合并的时候回传合并接口, 合并后更新列表的状态
+      return {
+        uploadChunkList,
+        id: createBookResult[index]?.id,
+        fileId: fileObject.fileId,
+        hashFileName: fileItem.hashFileName,
+      }
+    })
 
-    // 根据已经上传的分片进行过滤
-    uploadTaskList = uploadTaskList.filter((formData: FormData) => !uploadedChunkList.some((item) => item.chunkFileName === formData.get('chunkName')))
+    console.log(uploadTaskChunkList)
 
     // 开启上传任务
-    uploadChunkFileList(uploadTaskList, createBookResult?.id)
+    startUploadList(uploadTaskChunkList)
   } catch (error) {
+    console.log(error, 'error')
   } finally {
     loading.close()
   }
 }
 
-const batchVertifyExistFile = async (fileList) => {
-  const vertifyResults = await Promise.allSettled(fileList.map((fileItem) => uploadApi.vertifyExistFile(fileItem.fileName)))
-  if (!isNotEmptyArray(vertifyResults)) {
-    return false
-  }
-  let message = []
-  vertifyResults.forEach((vertifyResult, index) => {
+const batchVertifyExistFile = (selectFileList, uploadListByHashName) => {
+  let message = [],
+    needUploadedList = []
+  // 处理当前选择的文件, 查看是否需要再上传
+  uploadListByHashName.forEach((vertifyResult, index) => {
+    const fileItem = selectFileList[index]
     if (vertifyResult?.needUploaded === false) {
-      const fileItem = fileList[index]
       message.push(fileItem.originfileName)
+    } else if (vertifyResult?.needUploaded === true) {
+      needUploadedList.push({
+        file: fileItem.file,
+        fileId: fileItem.fileId,
+        uploadedChunkList: vertifyResult.uploadedChunkList,
+      })
     }
   })
+  // 无需上传的进行提示
   if (isNotEmptyArray(message)) {
     message.forEach((m) => {
-      proxy?.$message('文件已经上传, 无需再进行上传')
+      proxy?.$message(`文件${m}已经上传, 无需再进行上传`)
     })
   }
-  return vertifyResults.filter((v) => v?.needUploaded)
+
+  // 返回需要上传的文件
+  return needUploadedList
 }
 
-const handleUploadParams = async (file: File, id) => {
-  // 源文件名
-  const originfileName = file.name
+const getUploadChunkList = (file: File, fileName: string, uploadedList: string[]) => {
   // 分片
   const chunks = createFileChunks(file, CHUNK_SIZE)
+  // 组装分片参数
+  const uploadChunkList = []
+  chunks.forEach((item) => {
+    // 组装分片名称
+    const chunkName = fileName + '-' + item.chunkIndex
+    if (uploadedList.includes(chunkName)) {
+      return
+    }
+    const formData = new FormData()
+    formData.append('fileName', fileName)
+    formData.append('chunkName', chunkName)
+    formData.append('chunk', item.chunk)
+    uploadChunkList.push(formData)
+  })
+  return uploadChunkList
+}
+
+const getFileHashNameByFile = async (file: File) => {
   // 计算文件hash名称
   const fileHashName = await getFileHashName(file)
   // 获取文件的后缀
   const fileExtension = file.name.split('.').pop()
   // 用后缀拼接文件名
   const fileName = fileHashName + '.' + fileExtension
-  // 组装分片参数
-  const uploadTaskList = chunks.map((item) => {
-    const chunkName = fileHashName + '.' + fileExtension + '-' + item.chunkIndex
-    const formData = new FormData()
-    formData.append('originfileName', originfileName)
-    formData.append('fileName', fileName)
-    formData.append('chunkName', chunkName)
-    formData.append('chunk', item.chunk)
-    formData.append('id', id)
-    return formData
-  })
-  return {
-    originfileName,
-    fileName,
-    uploadTaskList,
-  }
+  return fileName
 }
 
-const calculateUploadFileProgress = (curIndex, progressEvent) => {
+const calculateUploadFileProgress = (curIndex, progressEvent, fileId) => {
+  const currentFile = uploadingFileList.value.find((uploadFile) => uploadFile.fileId === fileId)
   // 计算已经上传的字节数
   const uploadedByte = curIndex * CHUNK_SIZE
   // 正在上传片的字节数
@@ -164,63 +170,92 @@ const calculateUploadFileProgress = (curIndex, progressEvent) => {
   // 已经上传的总字节数
   const completedByte = uploadedByte + uploadProgressByte
   // 获取文件的总字节数
-  const fileTotalByte = currentFile.value.file.size
-
+  const fileTotalByte = currentFile.fileSize
   // 计算百分比
   const progressPrecent = Math.round((completedByte * 100) / fileTotalByte)
-  const curFile = fileList.value[0]
-  fileList.value[0] = {
-    ...curFile,
-    percentage: progressPrecent,
-    status: UploadStatus.UPLOADING,
-  }
+  // 修改正在上传的文件的百分比和上传状态
+  uploadingFileList.value = uploadingFileList.value.map((uploadFile) =>
+    uploadFile.fileId === fileId
+      ? {
+          ...uploadFile,
+          percentage: progressPrecent,
+          status: UploadStatus.UPLOADING,
+        }
+      : uploadFile,
+  )
 }
 
-const uploadChunkFileList = async (uploadTaskList: FormData[], id) => {
-  const taskList = uploadTaskList.map((uploadChunk: FormData, index) => {
+const uploadChunkFileList = async ({ uploadChunkList, id, fileId, hashFileName }) => {
+  const taskList = uploadChunkList.map((uploadChunk: FormData) => {
     return () => {
       return uploadApi.fileUpload(uploadChunk, {
         onUploadProgress: (progressEvent: ProgressEvent) => {
-          const curIndex = uploadChunk.get('chunkName')?.split('-')?.pop()
-          calculateUploadFileProgress(curIndex, progressEvent)
+          const curIndex = (uploadChunk.get('chunkName') as string)?.split('-')?.pop()
+          calculateUploadFileProgress(curIndex, progressEvent, fileId)
         },
       })
     }
   })
+  const queueTask = new QueueTask(id)
   queueTask.pushTask(taskList)
-  const result = await queueTask.startTask()
+  // todo: 后续操作暂停和继续在此任务队列中查找
+  uploadTaskList.value.push(queueTask)
+  const result: any = await queueTask.startTask()
   // 请求合并接口
-  if (isNotEmptyArray(result) && result.every((item) => item.success)) {
+  if (isNotEmptyArray(result) && result.every((item) => item?.success)) {
     // 调用分片合并接口
-    const mergeResult = await uploadApi.mergeFile(currentFile.value.fileName, id)
+    const mergeResult = await uploadApi.mergeFile(hashFileName, id)
     if (mergeResult) {
-      const curFile = fileList.value[0]
-      fileList.value[0] = {
-        ...curFile,
-        percentage: 100,
-        status: UploadStatus.SUCCESS,
-      }
+      uploadingFileList.value = uploadingFileList.value.map((uploadFile) =>
+        uploadFile.fileId === fileId
+          ? {
+              ...uploadFile,
+              percentage: 100,
+              status: UploadStatus.SUCCESS,
+            }
+          : uploadFile,
+      )
       getBookList()
     }
   }
 }
 
-const stopUploadFile = () => {
-  queueTask.stopTask()
-}
+// const stopUploadFile = () => {
+//   queueTask.stopTask()
+// }
 
-const resumeUploadFile = async () => {
-  const result = await queueTask.startTask()
-  // 请求合并接口
-  if (isNotEmptyArray(result) && result.every((item) => item.success)) {
-    // 调用分片合并接口
-    uploadApi.mergeFile(currentFile.value.fileName)
-  }
+// const resumeUploadFile = async () => {
+//   const result = await queueTask.startTask()
+//   // 请求合并接口
+//   if (isNotEmptyArray(result) && result.every((item) => item.success)) {
+//     // 调用分片合并接口
+//     uploadApi.mergeFile(currentFile.value.fileName)
+//   }
+// }
+
+const startUploadList = (uploadTaskChunkList: any[]) => {
+  let taskIndex = 0
+  // 并发控制, 开启三个工作区
+  let works = new Array(MAX_UPLOADING).fill(null)
+  works.forEach(async () => {
+    const start = async () => {
+      if (taskIndex >= uploadTaskChunkList.length) {
+        return
+      }
+      // 取出一个任务执行
+      try {
+        await uploadChunkFileList(uploadTaskChunkList[taskIndex++])
+      } catch (error) {
+        console.log(error, 'error')
+      }
+      start()
+    }
+    start()
+  })
 }
 
 const getBookList = async () => {
   const result = await bookApi.getBookList()
-  console.log(result, 'result')
   bookList.value = result
 }
 
