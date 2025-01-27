@@ -111,7 +111,7 @@ const batchVertifyExistFile = (selectFileList, uploadListByHashName) => {
   uploadListByHashName.forEach((vertifyResult, index) => {
     const fileItem = selectFileList[index]
     if (vertifyResult?.needUploaded === false) {
-      message.push(fileItem.originfileName)
+      message.push(fileItem.file.name)
     } else if (vertifyResult?.needUploaded === true) {
       needUploadedList.push({
         file: fileItem.file,
