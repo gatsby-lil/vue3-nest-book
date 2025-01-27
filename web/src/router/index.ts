@@ -24,6 +24,10 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: '/test',
+    component: () => import('@/views/test.vue')
+  },
 ]
 
 export default createRouter({
