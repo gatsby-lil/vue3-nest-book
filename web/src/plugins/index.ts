@@ -1,7 +1,7 @@
 import type { App } from "vue";
-import element  from "./element";
+import acroDesign from "./acroDesign";
 
-const modules = [element]
+const modules = [acroDesign]
 export default (app:App) => {
     modules.forEach(m => m(app));
 }

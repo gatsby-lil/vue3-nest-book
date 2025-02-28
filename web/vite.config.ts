@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import AutoImport from "unplugin-auto-import/vite"
 import Components from "unplugin-vue-components/vite"
+import { ArcoResolver } from 'unplugin-vue-components/resolvers';
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers"
 import ElementPlus from "unplugin-element-plus/vite"
 
@@ -19,13 +20,18 @@ export default defineConfig({
     extensions: ['.js', '.vue', '.ts', '.tsx']
   },
   plugins: [
-    vue(), 
+    vue(),
     AutoImport({
       imports: ['vue', "vue-router"],
-      resolvers: [ElementPlusResolver()],
-    }), 
+      resolvers: [ElementPlusResolver(), ArcoResolver()],
+    }),
     Components({
-      resolvers: [ElementPlusResolver()],
+      resolvers: [
+        ElementPlusResolver(), 
+        ArcoResolver({
+          sideEffect: true
+        })
+      ],
       dirs: [
         "src/components",
         "src/layout/components",

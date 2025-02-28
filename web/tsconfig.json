@@ -26,7 +26,12 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "types": ["element-plus/global", "./auto-imports.d.ts", "./components.d.ts"]
+    "types": [
+      "element-plus/global",
+      "./auto-imports.d.ts",
+      "./components.d.ts",
+      "@arco-design/web-vue/es/index.d.ts"
+    ]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
   "references": [{ "path": "./tsconfig.node.json" }]

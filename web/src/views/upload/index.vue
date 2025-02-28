@@ -1,7 +1,7 @@
 <template>
   <div class="upload-box">
     <div class="upload-enter-box">
-      <el-button type="primary" size="large" @click="clickChangeDrawer"> 点击上传 </el-button>
+      <a-button type="primary" @click="clickChangeDrawer">点击上传</a-button>
     </div>
     <!-- 文件上传 -->
     <upload-book :confirm="confirm" ref="uploadRef" />
@@ -52,9 +52,14 @@ const confirm = async () => {
       }),
     )
     // 调用后端接口, 判断文件是否需要进行分片上传
-    const uploadListByHashName = await Promise.all(fileHashNameList.map((fileItem) => uploadApi.vertifyExistFile(fileItem.hashFileName)))
+    const uploadListByHashName = await Promise.all(
+      fileHashNameList.map((fileItem) => uploadApi.vertifyExistFile(fileItem.hashFileName)),
+    )
     // 判断还需要上传的文件
-    const needUploadedList = batchVertifyExistFile(uploadRef.value.selectFileList, uploadListByHashName)
+    const needUploadedList = batchVertifyExistFile(
+      uploadRef.value.selectFileList,
+      uploadListByHashName,
+    )
     if (!isNotEmptyArray(needUploadedList)) {
       return
     }
@@ -83,7 +88,11 @@ const confirm = async () => {
     // 开启文件上传准备分片数据
     const uploadTaskChunkList = needUploadedList.map((fileObject, index) => {
       const fileItem = fileHashNameList.find((item) => item.fileId === fileObject.fileId)
-      const uploadChunkList = getUploadChunkList(fileObject.file, fileItem.hashFileName, fileObject.uploadedChunkList)
+      const uploadChunkList = getUploadChunkList(
+        fileObject.file,
+        fileItem.hashFileName,
+        fileObject.uploadedChunkList,
+      )
       // id: 是需要在合并的时候回传合并接口, 合并后更新列表的状态
       return {
         uploadChunkList,

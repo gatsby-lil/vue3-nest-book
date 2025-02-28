@@ -25,8 +25,16 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/upload',
+    component: () => import('@/views/upload/index.vue'),
+  },
+  {
     path: '/test',
     component: () => import('@/views/test.vue')
+  },
+  {
+    path: '/access',
+    component: () => import('@/views/actor/index.vue')
   },
 ]
 

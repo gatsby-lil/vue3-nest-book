@@ -1,30 +1,46 @@
 <template>
   <!-- 文件上传 -->
-  <el-drawer v-model="isShowDrawer" size="900px">
-    <el-form :model="uploadBookForm" :rules="uploadBookFormRules" label-width="auto" style="max-width: 600px" ref="uploadBookFormRef">
-      <el-form-item label="描述">
-        <el-input v-model="uploadBookForm.description" type="textarea" show-word-limit maxlength="200" />
-      </el-form-item>
-      <el-form-item label="标签" prop="tags">
-        <el-select v-model="uploadBookForm.tags" filterable allow-create default-first-option :reserve-keyword="false" placeholder="请选择" style="width: 600px">
-          <el-option v-for="item in tagsList" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="上传文件" prop="selectFile">
-        <div class="upload-book-container" ref="uploadRef">
-          <div class="upload-description">
-            <div>说明:</div>
-            <div>① 支持格式: pdf、epub</div>
-            <div>② 每次文件上传大小总数不超过1GB</div>
-          </div>
-          <div class="file-upload-icon">
-            <img src="@/assets/uploading.svg" />
-            <p class="file-info">点击选择文件</p>
-          </div>
+  <a-drawer
+    :visible="isShowDrawer"
+    :width="900"
+    @ok="confirm"
+    @cancel="() => changeShowDrawer(false)"
+    unmountOnClose>
+    <a-form
+      :model="uploadBookForm"
+      :rules="uploadBookFormRules"
+      label-align="left"
+      label-width="auto"
+      style="max-width: 600px"
+      ref="uploadBookFormRef">
+      <a-form-item label="标签" field="tags">
+        <a-select v-model="uploadBookForm.tags" placeholder="请选择标签" filter-option>
+          <a-option
+            v-for="item in tagsList"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value" />
+        </a-select>
+      </a-form-item>
+      <a-form-item label="描述" field="description">
+        <a-textarea placeholder="输入描述" allow-clear />
+      </a-form-item>
+      <a-form-item label="上传文件" field="selectFile">
+        <div class="custom-upload">
+          <a-upload
+            v-model:file-list="selectFileList"
+            :show-retry-button="false"
+            :auto-upload="false"
+            :show-cancel-button="false"
+            :show-preview-button="false"
+            :limit="10"
+            @before-upload="beforeUpload"
+            @before-remove="deleteFile"
+            multiple />
         </div>
-      </el-form-item>
-    </el-form>
-    <div class="select-list-container">
+      </a-form-item>
+    </a-form>
+    <!-- <div class="select-list-container">
       <div class="select-list" v-if="selectFileList?.length > 0">
         <div v-for="fileObject in selectFileList" :key="fileObject.fileId" class="file-item">
           <div class="file-icon">
@@ -38,23 +54,17 @@
           </div>
         </div>
       </div>
-    </div>
-    <template #footer>
-      <div style="flex: auto">
-        <el-button @click="() => changeShowDrawer(false)" size="large">取消</el-button>
-        <el-button type="primary" @click="confirm" size="large">确认</el-button>
-      </div>
-    </template>
-  </el-drawer>
+    </div> -->
+  </a-drawer>
 </template>
 
 <script setup lang="ts">
 import { tagsApi } from '@/api'
-import { mapLabelValue, isNotEmptyArray } from '@/utils'
-import { MAX_FILE_NUM } from '@/constant'
+import { mapLabelValue, isNotEmptyArray, generateUniqueId } from '@/utils'
 import { IFileWithFileId } from '@/types'
-import useDragAndClick from '../hooks/useDragAndClick'
+import { MAX_FILE_SIZE, ACCEPT_FILE, MAX_FILE_NUM } from '@/constant'
 
+const { proxy } = getCurrentInstance()!
 defineProps({
   confirm: {
     type: Function,
@@ -63,10 +73,10 @@ defineProps({
 })
 
 const tagsList = ref([])
+const selectFileList = ref([])
 const isShowDrawer = ref(false)
 const uploadRef = ref<HTMLDivElement | null>(null)
 const uploadBookFormRef = ref(null)
-const { selectFileList } = useDragAndClick(uploadRef, isShowDrawer)
 
 const uploadBookForm = reactive({
   description: '',
@@ -75,19 +85,6 @@ const uploadBookForm = reactive({
 
 const uploadBookFormRules = ref({
   tags: [{ required: true, message: '必填项', trigger: 'blur' }],
-  selectFile: [
-    {
-      validator: (_, value, callback) => {
-        if (!isNotEmptyArray(selectFileList.value)) {
-          return callback(new Error('至少上传一个文件'))
-        }
-        if (selectFileList.value.length > MAX_FILE_NUM) {
-          return callback(new Error('每次上传不得超过10个文件'))
-        }
-        return callback()
-      },
-    },
-  ],
 })
 
 const changeShowDrawer = (isShow: boolean) => {
@@ -99,8 +96,49 @@ const initData = async () => {
   tagsList.value = mapLabelValue(result, 'tagName', 'id')
 }
 
-const deleteFile = (fileId: string) => {
-  selectFileList.value = selectFileList.value.filter((fileObject: IFileWithFileId) => fileObject.fileId != fileId)
+const deleteFile = (curFileObj) => {
+  const fileId = curFileObj.file.fileId
+  selectFileList.value = selectFileList.value.filter((fileObject) => {
+    console.log(fileObject, 'ooo')
+    return fileObject.fileId != fileId
+  })
+}
+
+const checkFile = (file: File) => {
+  if (!file) {
+    proxy?.$message.error('未选择任何文件')
+    return
+  }
+  let totalSize = selectFileList.value.reduce(
+    (file: File, nextFile: File) => file.size + nextFile.size,
+    0,
+  )
+  totalSize = totalSize += file.size
+
+  if (totalSize > MAX_FILE_SIZE) {
+    proxy?.$message.error('文件上传不能大于1GB')
+    return
+  }
+
+  // 校验上传的文件数量, 每次上传最多不能超过10个
+  const originLength = selectFileList.value.length
+  if (originLength + 1 > MAX_FILE_NUM) {
+    proxy?.$message.error('每次上传的文件个数不能超过10个')
+    return
+  }
+
+  return true
+}
+
+const beforeUpload = (file) => {
+  let flag = checkFile(file)
+
+  if (flag) {
+    file.fileId = generateUniqueId()
+    selectFileList.value.push(file)
+  }
+
+  return flag
 }
 
 watch(isShowDrawer, () => {
@@ -170,6 +208,14 @@ defineExpose({
       width: 96px;
       height: 96px;
     }
+  }
+}
+.custom-upload {
+  ::v-deep .arco-progress-type-circle {
+    display: none;
+  }
+  ::v-deep .arco-upload-icon-start {
+    display: none;
   }
 }
 </style>

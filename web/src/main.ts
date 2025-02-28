@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import router from '@/router'
 import 'normalize.css/normalize.css'
+import '@arco-design/web-vue/dist/arco.css';
 import plugins from './plugins'
 import App from './App.vue'
 const app = createApp(App)
