@@ -1,62 +1,72 @@
 <template>
-  <div class="test-box">TEST</div>
+  <div class="test-box">
+    <a-card title="大模型">
+      <a-space direction="vertical" size="large">
+        <a-input-search
+          :style="{ width: '320px' }"
+          :loading="loading"
+          v-model="question"
+          @click="search"
+          placeholder="输入你的问题"
+          search-button />
+        <!-- <a-textarea placeholder="AI回复" allow-clear v-model="content" /> -->
+        <div>AI:</div>
+        <div>{{ content }}</div>
+      </a-space>
+    </a-card>
+    <!-- <a-card title="MoonShoot" :style="{ marginTop: '20px' }">
+      <a-space direction="vertical" size="large">
+        <a-input-search
+          :style="{ width: '320px' }"
+          :loading="loading"
+          v-model="question"
+          @click="search"
+          placeholder="输入你的问题"
+          search-button />
+        <div>AI:</div>
+        <div>{{ content }}</div>
+      </a-space>
+    </a-card> -->
+  </div>
 </template>
 
 <script setup lang="ts">
 import { util } from '@/utils'
-let obj = {
-  name: '珠峰',
-  age: 13,
-  bool: true,
-  n: null,
-  u: undefined,
-  sym: Symbol('sym'),
-  big: 10n,
-  list: [10, 20, 30],
-  reg: /\d+/,
-  time: new Date(),
-  err: new Error('xxx'),
-  num: new Number(1),
-  ke: {
-    js: '基础课',
-    web: '高级课',
-  },
-  [Symbol('KEY')]: 100,
-  fn: function () {},
-  xxx: Object(Symbol()),
+import { testApi } from '@/api'
+import { onMounted } from 'vue'
+const question = ref('')
+const content = ref('')
+const loading = ref(false)
+const eventSourceRef = ref(null)
+async function search() {
+  if (!question.value) {
+    return
+  }
+  loading.value = true
+  content.value = ''
+  // testApi.sendQuestion(question.value)
+  const eventSource = new EventSource(`http://localhost:3000/stream?question=${question.value}`)
+  eventSource.addEventListener('message', (e) => {
+    console.log(e.data)
+    loading.value = false
+    content.value += e.data || ''
+  })
+  eventSource.addEventListener('end', () => {
+    console.log('传输完成')
+    eventSource.close()
+  })
 }
-// obj.obj = obj
-let obj1 = {
-  name: '张三',
-  age: 25,
-  hobby: {
-    music: 100,
-    jump: 80,
-  },
-}
-// obj1.obj1 = obj1
-let obj2 = {
-  name: '李四',
-  age: 22,
-  sex: 0,
-  hobby: {
-    read: 100,
-    music: 90,
-  },
-}
-obj2.obj2 = obj2
-let obj3 = {
-  name: '王五',
-  age: 20,
-  height: '158cm',
-  score: {
-    math: 100,
-    chinese: 90,
-  },
-}
-
-let n = util.merge(true, obj1, obj2)
-console.log(n)
+// onMounted(() => {
+//   console.log('mounted')
+//   eventSourceRef.value = new EventSource(`http://localhost:3000/info`)
+//   eventSourceRef.value.addEventListener('message', (e) => {
+//     console.log(e.data)
+//   })
+//   eventSourceRef.value.addEventListener('end', () => {
+//     console.log('传输完成')
+//     eventSource.close()
+//   })
+// })
 </script>
 
 <style lang="less" scoped>
