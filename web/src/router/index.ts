@@ -40,6 +40,10 @@ const routes: RouteRecordRaw[] = [
     path: '/access',
     component: () => import('@/views/actor/index.vue')
   },
+   {
+    path: '/chatAI',
+    component: () => import('@/views/chatAI/index.vue')
+  },
 ]
 
 export default createRouter({
